@@ -2,27 +2,12 @@
 
 #include "ofMain.h"
 #include "ofxTimeMeasurements.h"
+#include "Constants.h"
+#include "Spring.h"
 
 // missing name "WTF_BUG" !!
 
 class testApp : public ofBaseApp{
-
-	struct Node{
-		Node(int ID_, int parentID_, string name_){
-			name = name_;
-			ID = ID_;
-			parentID = parentID_;
-			parentName = "";
-		};
-		ofVec3f pos;
-		vector<Node*> children;
-		vector<Node*> parents;
-		vector<string> parentNames;
-		int ID;
-		int parentID;
-		string parentName;
-		string name;
-	};
 	
 	public:
 	
@@ -41,21 +26,23 @@ class testApp : public ofBaseApp{
 		void gotMessage(ofMessage msg){};
 
 
-		void parseCSV(string);
-
+		void parseCSV(string, vector<Node*> & species);
 		void parseTXT(string, vector<Node*> & species);
 
-		void filterDuplicates(	vector<Node*> &inputWithIDs,
-								map<string, Node*> & nodesByName
-							  );
+		void filterDuplicates(vector<Node*> &inputWithIDs, map<string, Node*> & nodesByName );
+		void* buildTree(map<string, Node*> & nodesByName);
 
-		void* buildTree( vector<Node*> & inputWithIDs,
-						map<string, Node*> & nodesByName
-					   );
-
+		void recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel,
+										   vector<Node*> &chosenNodes, vector<Spring*> &springs);
+		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
+		void updateNodeForces(vector<Node*> &chosenNodes);
+		void fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & ptsMesh);
 	
 		vector<Node*> speciesAll; //access by ID, contains duplicates
 		map<string, Node*> nodesByName;
+
+		vector<Node*> chosenNodes;
+		vector<Spring*> springs;
 
 		Node* treeRoot;
 

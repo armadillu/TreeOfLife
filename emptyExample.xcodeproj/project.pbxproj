@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB04BC831755457900020CC1 /* Spring.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BB04BC821755457900020CC1 /* Spring.cpp */; };
 		BB56945517520E5F00869254 /* ofxTimeMeasurements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BB56945117520E5F00869254 /* ofxTimeMeasurements.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
@@ -61,6 +62,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BB04BC811755457900020CC1 /* Spring.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Spring.h; sourceTree = "<group>"; };
+		BB04BC821755457900020CC1 /* Spring.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Spring.cpp; sourceTree = "<group>"; };
+		BB04BC841755477000020CC1 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		BB56944E17520E5F00869254 /* install.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = install.xml; sourceTree = "<group>"; };
 		BB56944F17520E5F00869254 /* ReadMe.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe.md; sourceTree = "<group>"; };
 		BB56945117520E5F00869254 /* ofxTimeMeasurements.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxTimeMeasurements.cpp; sourceTree = "<group>"; };
@@ -210,6 +214,9 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				BB04BC841755477000020CC1 /* Constants.h */,
+				BB04BC811755457900020CC1 /* Spring.h */,
+				BB04BC821755457900020CC1 /* Spring.cpp */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* testApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* testApp.h */,
@@ -313,6 +320,7 @@
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* testApp.cpp in Sources */,
 				BB56945517520E5F00869254 /* ofxTimeMeasurements.cpp in Sources */,
+				BB04BC831755457900020CC1 /* Spring.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
