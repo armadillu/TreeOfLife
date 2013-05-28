@@ -27,6 +27,7 @@ void testApp::setup(){
 	lines.setMode(OF_PRIMITIVE_LINES);
 	nodes.setMode(OF_PRIMITIVE_POINTS);
 	glPointSize(10);
+	ofSetLineWidth(2);
 
 	int len = 100;
 	int level = 0;
@@ -42,6 +43,7 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 	chosenNodes.push_back(node);
 	int n = node->children.size();
 	level++;
+	node->level = level;
 	if (level >= maxLevel){
 		node->softLeaf = true;
 		level--;
@@ -59,20 +61,23 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 
 void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & ptsMesh){
 
-	ofSeedRandom(0); //force repeated random sequence TODO
 	int n = chosenNodes.size();
 	for(int i = 0; i < n; i++) {
 		Node* me = chosenNodes[i];
 		if (!me->softLeaf){
 			int nn = me->children.size();
-			ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255));
+			//ofSeedRandom(me->level + 1 ); //force repeated random sequence TODO
+			//ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 			for(int j = 0; j < nn; j++) {
-				lines.addColor(c);
+				//lines.addColor(c);
 				lines.addVertex( me->pos );
-				lines.addColor(c);
+				//lines.addColor(c);
 				lines.addVertex( me->children[j]->pos );
 			}
 		}
+		ofSeedRandom(me->level);
+		ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
+		ptsMesh.addColor(c);
 		ptsMesh.addVertex(me->pos);
 	}
 }
@@ -83,11 +88,11 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 
 	for(int i = 0; i < n; i++) {
 
-		Node* me = chosenNodes[i];
+		Node* me = chosenNodes[i]; //each node repells each other, ALL NODES!
 		for(int l = 1; l < n; l++) {
 			Node* me2 = chosenNodes[l];
-			me->addRepulsion(me2);
-			me2->addRepulsion(me);
+			me->addRepulsion(me2, 0.7);
+			me2->addRepulsion(me, 0.7);
 		}
 
 
@@ -319,14 +324,17 @@ void testApp::draw(){
 
 
 	TIME_SAMPLE_START("draw");
-	//cam.begin();
+	cam.begin();
 
+		ofSetColor(255, 32);
 		lines.draw();
-
-		ofSetColor(255, 128);
 		nodes.draw();
-	
-	//cam.end();
+
+	ofSetColor(255, 32);
+//	for(int i = 0; i < chosenNodes.size(); i++){
+//		ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
+//	}
+	cam.end();
 	TIME_SAMPLE_STOP("draw");
 
 	TIME_SAMPLE_DRAW_TOP_LEFT();
@@ -345,8 +353,8 @@ void testApp::keyReleased(int key){
 
 void testApp::mouseMoved(int x, int y){
 
-	treeRoot->pos.x = x;
-	treeRoot->pos.y = y;
+	//treeRoot->pos.x = x;
+	//treeRoot->pos.y = y;
 }
 
 

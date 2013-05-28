@@ -11,14 +11,17 @@
 
 
 #define	FATHER_CHILDREN_SEPARATOR	'$'
-#define SPRING_LENGTH				70.0f
-#define SPRING_FORCE				30.0f
-#define REPULSION_FORCE				30.9f
-#define REPULSION_DIST				80.0f
-#define FRICTION					0.97f
+#define SPRING_LENGTH				30.0f
+#define SPRING_FORCE				90.0f
+#define REPULSION_FORCE				50.9f
+#define REPULSION_DIST				180.0f
+#define FRICTION					0.95f
 #define DT							0.01666f
 
-#define TREE_DEPTH					5
+#define	ALPHA						64
+
+#define TREE_DEPTH					6
+
 struct Node{
 	Node(int ID_, int parentID_, string name_, string parentName_ = ""){
 		name = name_;
@@ -26,19 +29,20 @@ struct Node{
 		parentID = parentID_;
 		parentName = parentName_;
 		float r = 10;
-		pos.x = ofRandom(-r,r) + ofGetWidth() / 2;
-		pos.y = ofRandom(-r,r) + ofGetHeight() / 2;
+		pos.x = ofRandom(-r,r) ;+ ofGetWidth() / 2;
+		pos.y = ofRandom(-r,r) ;+ ofGetHeight() / 2;
 		softLeaf = true;
 		fixed = false;
 	};
 
-	void addRepulsion(Node* other){
+	void addRepulsion(Node* other, float scale = 1.0f){
 		ofVec2f vec = (pos - other->pos);
 		float dist = vec.length();
 		if (dist < REPULSION_DIST){
 			float percent = 1.0f - (dist / REPULSION_DIST);
+			percent *= percent;
 			vec.normalize();
-			addForce( ofVec2f( vec * REPULSION_FORCE * percent) );
+			addForce( ofVec2f( vec * REPULSION_FORCE * scale * percent) );
 		}
 	}
 
@@ -67,6 +71,7 @@ struct Node{
 	string name;
 	bool softLeaf; //if true, used as a mark that we should look for children beyond this node when drawing
 	bool fixed;
+	int level;
 };
 
 
