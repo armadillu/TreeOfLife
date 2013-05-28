@@ -11,11 +11,6 @@
 
 
 #define	FATHER_CHILDREN_SEPARATOR	'$'
-#define SPRING_LENGTH				30.0f
-#define SPRING_FORCE				90.0f
-#define REPULSION_FORCE				50.9f
-#define REPULSION_DIST				180.0f
-#define FRICTION					0.95f
 #define DT							0.01666f
 
 #define	ALPHA						64
@@ -35,14 +30,14 @@ struct Node{
 		fixed = false;
 	};
 
-	void addRepulsion(Node* other, float scale = 1.0f){
+	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
 		ofVec2f vec = (pos - other->pos);
 		float dist = vec.length();
-		if (dist < REPULSION_DIST){
-			float percent = 1.0f - (dist / REPULSION_DIST);
+		if (dist < repDist){
+			float percent = 1.0f - (dist / repDist);
 			percent *= percent;
 			vec.normalize();
-			addForce( ofVec2f( vec * REPULSION_FORCE * scale * percent) );
+			addForce( ofVec2f( vec * repForce * scale * percent) );
 		}
 	}
 
@@ -50,11 +45,11 @@ struct Node{
 		force += f;
 	};
 
-	void applyForces(float dt){
+	void applyForces(float dt, float fr){
 		if(fixed) return;
 		vel = vel + force * dt;
 		pos = pos + vel * dt;
-		vel *= FRICTION;
+		vel *= fr;
 		//now reset the force
 		force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
 	}

@@ -5,7 +5,35 @@ void testApp::setup(){
 
 	ofSetVerticalSync(true);
 	ofEnableAlphaBlending();
+	glDisable(GL_POINT_SMOOTH);
+
 	ofBackground(22);
+
+	SPRING_LENGTH = 30;
+	SPRING_FORCE = 90;
+	REPULSION_FORCE = 50;
+	REPULSION_DIST = 180;
+	FRICTION = 0.95;
+
+	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
+
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 100);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_FORCE, 1, 200);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 1, 500);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_DIST, 1, 500);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawNames);
+
+
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,255,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurIterations, 0, 4);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurOffset, 0.0, 10);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurOverlayGain, 0, 255);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(numBlurOverlays, 0, 4);
+
+
+
+	OFX_REMOTEUI_SERVER_LOAD_FROM_XML();
 
 	printf("INT_MAX: %d\n######################\n", INT_MAX);
 
@@ -35,6 +63,28 @@ void testApp::setup(){
 	recursiveFillVectorAndSprings(treeRoot, level, maxLevel, chosenNodes, springs);
 	cout << "chosenNodes at maxLevel " << maxLevel << " : " << chosenNodes.size() << endl;
 	cout << "num Springs: " << springs.size() << endl;
+
+
+	// blur ///////////////////////////
+
+	ofFbo::Settings s;
+	s.width = 2048;
+	s.height = 1024;
+	s.internalformat = GL_RGBA;
+	//	s.textureTarget = GL_TEXTURE_RECTANGLE_ARB;
+	s.maxFilter = GL_LINEAR; GL_NEAREST;
+	s.numSamples = 4;
+	s.numColorbuffers = 3;
+	s.useDepth = true;
+	s.useStencil = false;
+
+	cleanImgFBO.allocate( s );
+	blurOutputFBO.allocate( s );
+	blurTempFBO.allocate( s );
+	blurTempFBO2.allocate( s );
+
+	gpuBlur.setup();
+
 	
 }
 
@@ -52,7 +102,7 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 	node->softLeaf = false;
 	for(int i = 0; i < n; i++) {
 		Node* child = node->children[i];
-		Spring * s = new Spring(node, child);
+		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRING_FORCE);
 		springs.push_back(s);
 		recursiveFillVectorAndSprings(child, level, maxLevel, chosenNodes, springs);
 	}
@@ -91,8 +141,8 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 		Node* me = chosenNodes[i]; //each node repells each other, ALL NODES!
 		for(int l = 1; l < n; l++) {
 			Node* me2 = chosenNodes[l];
-			me->addRepulsion(me2, 0.7);
-			me2->addRepulsion(me, 0.7);
+			me->addRepulsion(me2, REPULSION_FORCE, REPULSION_DIST, 0.7);
+			me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, 0.7);
 		}
 
 
@@ -101,15 +151,15 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 		for( int j = 0; j < numChild; j++ ){
 
 			Node* ch1 = me->children[j];
-			ch1->addRepulsion(me); // I repel my own children
+			ch1->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST); // I repel my own children
 
 			if (!me->softLeaf){ //if not a leaf, apply forces children to to children
 
 				for( int k = 1; k < numChild; k++ ){
 
 					Node* ch2 = me->children[k];
-					ch1->addRepulsion(ch2); // my children repel each other
-					ch2->addRepulsion(ch1);
+					ch1->addRepulsion(ch2, REPULSION_FORCE, REPULSION_DIST); // my children repel each other
+					ch2->addRepulsion(ch1, REPULSION_FORCE, REPULSION_DIST);
 				}
 			}
 		}
@@ -126,7 +176,7 @@ void testApp::updateNodeForces(vector<Node*> &chosenNodes){
 
 	int n = chosenNodes.size();
 	for(int i = 0; i < n; i++) {
-		chosenNodes[i]->applyForces(DT);
+		chosenNodes[i]->applyForces(DT, FRICTION);
 	}
 }
 
@@ -305,6 +355,8 @@ void testApp::parseTXT(string file, vector<Node*> &list){
 
 void testApp::update(){
 
+	OFX_REMOTEUI_SERVER_UPDATE(DT);
+
 	TIME_SAMPLE_START("update");
 
 	int level = 0;
@@ -324,17 +376,41 @@ void testApp::draw(){
 
 
 	TIME_SAMPLE_START("draw");
-	cam.begin();
 
+	ofEnableBlendMode(OF_BLENDMODE_ADD);
+	//draw into fbo
+	cleanImgFBO.begin();
+		ofClear(22, 22, 22, 255);
+		cam.begin();
+
+			ofSetColor(255, 32);
+			lines.draw();
+			nodes.draw();
+
+	if(drawNames){
 		ofSetColor(255, 32);
-		lines.draw();
-		nodes.draw();
+		for(int i = 0; i < chosenNodes.size(); i++){
+			ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
+		}
+	}
+		cam.end();
+	cleanImgFBO.end();
 
-	ofSetColor(255, 32);
-//	for(int i = 0; i < chosenNodes.size(); i++){
-//		ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
-//	}
-	cam.end();
+	//calc the blur
+	ofSetColor(255);
+	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+	gpuBlur.blur(&cleanImgFBO, &blurOutputFBO, &blurTempFBO, &blurTempFBO2, blurIterations, blurOffset);
+
+	//draw all
+	ofSetColor(255);
+	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+	cleanImgFBO.getTextureReference().draw(0, cleanImgFBO.getHeight(), cleanImgFBO.getWidth(), -cleanImgFBO.getHeight());
+	ofEnableBlendMode(OF_BLENDMODE_ADD);
+	ofSetColor(blurOverlayGain);
+	for(int i = 0; i < numBlurOverlays; i++){
+		blurOutputFBO.getTextureReference().draw(0, blurOutputFBO.getHeight(), blurOutputFBO.getWidth(), -blurOutputFBO.getHeight());
+	}
+
 	TIME_SAMPLE_STOP("draw");
 
 	TIME_SAMPLE_DRAW_TOP_LEFT();
@@ -372,4 +448,6 @@ void testApp::mouseReleased(int x, int y, int button){
 
 }
 
-
+void testApp::exit(){
+	OFX_REMOTEUI_SERVER_SAVE_TO_XML();
+}

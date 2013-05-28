@@ -4,6 +4,8 @@
 #include "ofxTimeMeasurements.h"
 #include "Constants.h"
 #include "Spring.h"
+#include "ofxRemoteUIServer.h"
+#include "ofFboBlur.h"
 
 // missing name "WTF_BUG" !!
 
@@ -24,6 +26,8 @@ class testApp : public ofBaseApp{
 		void windowResized(int w, int h){};
 		void dragEvent(ofDragInfo dragInfo){};
 		void gotMessage(ofMessage msg){};
+
+		void exit();
 
 
 		void parseCSV(string, vector<Node*> & species);
@@ -50,4 +54,22 @@ class testApp : public ofBaseApp{
 		ofMesh nodes;
 
 		ofEasyCam cam;
+
+		float SPRING_LENGTH;
+		float SPRING_FORCE;
+		float REPULSION_FORCE;
+		float REPULSION_DIST;
+		float FRICTION;
+	bool drawNames;
+
+		int blurIterations;
+		float blurOffset;
+	int blurOverlayGain;
+	int numBlurOverlays;
+		ofFboBlur gpuBlur;
+		ofFbo	cleanImgFBO;
+		ofFbo	blurOutputFBO;
+		ofFbo	blurTempFBO;
+		ofFbo	blurTempFBO2;
+
 };
