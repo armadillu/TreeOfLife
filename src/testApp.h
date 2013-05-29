@@ -6,6 +6,7 @@
 #include "Spring.h"
 #include "ofxRemoteUIServer.h"
 #include "ofFboBlur.h"
+#include "Parser.h"
 
 // missing name "WTF_BUG" !!
 
@@ -29,19 +30,16 @@ class testApp : public ofBaseApp{
 
 		void exit();
 
-
-		void parseCSV(string, vector<Node*> & species);
-		void parseTXT(string, vector<Node*> & species);
-
-		void filterDuplicates(vector<Node*> &inputWithIDs, map<string, Node*> & nodesByName );
-		void* buildTree(map<string, Node*> & nodesByName);
-
 		void recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel,
 										   vector<Node*> &chosenNodes, vector<Spring*> &springs);
+
 		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
 		void updateNodeForces(vector<Node*> &chosenNodes);
 		void fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & ptsMesh);
-	
+
+
+		Parser parser;
+
 		vector<Node*> speciesAll; //access by ID, contains duplicates
 		map<string, Node*> nodesByName;
 
@@ -61,30 +59,27 @@ class testApp : public ofBaseApp{
 		float REPULSION_FORCE;
 		float REPULSION_DIST;
 		float FRICTION;
-	bool drawNames;
-	int nameFilter;
-	bool updateMesh;
-	bool repellNN;
-	float repelNNGain;
-	float repelMyChildrenGain;
-	float repelChildChildGain;
-	float repelChildChildDistGain;
-	bool drawForces;
+		bool drawNames;
+		int nameFilter;
+		bool updateMesh;
+		bool repellNN;
+		float repelNNGain;
+		float repelMyChildrenGain;
+		float repelChildChildGain;
+		float repelChildChildDistGain;
+		bool drawForces;
 
-	float lineWidth;
-	float pointSize;
-	float lineAlpha;
-	float pointAlpha;
-	float nameAlpha;
+		float lineWidth;
+		float pointSize;
+		float lineAlpha;
+		float pointAlpha;
+		float nameAlpha;
 
 		int blurIterations;
 		float blurOffset;
-	int blurOverlayGain;
-	int numBlurOverlays;
+		int blurOverlayGain;
+		int numBlurOverlays;
+
 		ofFboBlur gpuBlur;
-		ofFbo	cleanImgFBO;
-		ofFbo	blurOutputFBO;
-		ofFbo	blurTempFBO;
-		ofFbo	blurTempFBO2;
 
 };
