@@ -15,7 +15,7 @@
 
 #define	ALPHA						255
 
-#define TREE_DEPTH					7
+#define TREE_DEPTH					5
 
 struct Node{
 	Node(int ID_, int parentID_, string name_, string parentName_ = ""){
@@ -23,21 +23,25 @@ struct Node{
 		ID = ID_;
 		parentID = parentID_;
 		parentName = parentName_;
-		float r = 500;
-		pos.x = ofRandom(-r,r) ;+ ofGetWidth() / 2;
-		pos.y = ofRandom(-r,r) ;+ ofGetHeight() / 2;
-		pos.z = ofRandom(-r,r) ;+ ofGetHeight() / 2;
 		softLeaf = true;
 		fixed = false;
 	};
+
+	void setRandomPosAccordingToLevel(){
+		float r = level * 150;
+		float a1 = ofRandom(2*M_PI);
+		float a2 = ofRandom(2*M_PI);
+		pos.x = r * cos(a1) * sin(a2) ;
+		pos.y = r * sin(a1) * sin(a2) ;
+		pos.z = r * cos(a2) ;
+	}
 
 	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
 		ofVec3f vec = (pos - other->pos);
 		float dist = vec.length();
 		if (dist < repDist){
 			float percent = 1.0f - (dist / repDist);
-			//percent *= percent ;
-			vec.normalize();
+			vec /= dist; // normalize
 			addForce( ofVec3f( vec * repForce * scale * percent) );
 		}
 	}
@@ -51,7 +55,9 @@ struct Node{
 		vel = vel + force * dt;
 		pos = pos + vel * dt;
 		vel *= fr;
-		//now reset the force
+	}
+
+	void resetForce(){
 		force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
 	}
 	

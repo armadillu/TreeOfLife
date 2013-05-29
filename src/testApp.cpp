@@ -17,25 +17,44 @@ void testApp::setup(){
 
 	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
 
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_FORCE, 0, 200);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_FORCE, 0, 100);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 100);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 0, 500);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 0, 100);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_DIST, 1, 500);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1);
+
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,128,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelNNGain, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelMyChildrenGain, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildGain, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildDistGain, 0, 1);
+
+
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawNames);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 30);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repellNN);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
+
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,255,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineWidth, 0.1, 10);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointSize, 1, 30);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineAlpha, 1, 255);
+
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,255,0,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineAlpha, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointAlpha, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameAlpha, 0, 1);
+
+
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,255,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurIterations, 0, 4);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurOffset, 0.0, 10);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurOverlayGain, 0, 255);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(numBlurOverlays, 0, 4);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(numBlurOverlays, 0, 7);
 
 	OFX_REMOTEUI_SERVER_LOAD_FROM_XML();
 
@@ -52,13 +71,14 @@ void testApp::setup(){
 
 	TIME_SAMPLE_START("buildTree");
 	treeRoot = (Node*)buildTree(nodesByName);
-	treeRoot->fixed = true;
+	//treeRoot->fixed = true;
 	treeRoot->color = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 	TIME_SAMPLE_STOP("buildTree");
 
 
 	lines.setMode(OF_PRIMITIVE_LINES);
 	nodes.setMode(OF_PRIMITIVE_POINTS);
+	forces.setMode(OF_PRIMITIVE_LINES);
 
 	int len = 100;
 	int level = 0;
@@ -97,6 +117,7 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 	int n = node->children.size();
 	level++;
 	node->level = level;
+	node->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
 	if (level >= maxLevel){
 		node->softLeaf = true;
 		level--;
@@ -106,8 +127,7 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 	ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 	for(int i = 0; i < n; i++) {
 		Node* child = node->children[i];
-		child->color = c;
-		child->colorSoft = child->color * 0.15;
+		child->color = c;;
 		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRING_FORCE);
 		springs.push_back(s);
 		recursiveFillVectorAndSprings(child, level, maxLevel, chosenNodes, springs);
@@ -125,14 +145,20 @@ void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & 
 			//ofSeedRandom(me->level + 1 ); //force repeated random sequence TODO
 			//ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 			for(int j = 0; j < nn; j++) {
-				lines.addColor(me->colorSoft);
+				ofColor c1 = me->color;
+				c1 *= lineAlpha;
+				lines.addColor( c1 * lineAlpha);
 				lines.addVertex( me->pos );
-				lines.addColor(me->children[j]->colorSoft);
+				ofColor c2 = me->children[j]->color;
+				c2 *= lineAlpha;
+				lines.addColor(c2);
 				lines.addVertex( me->children[j]->pos );
 			}
 		}
 		//ofSeedRandom(me->level);
-		ptsMesh.addColor(me->color);
+		ofColor c = me->color;
+		c.a *= pointAlpha;
+		ptsMesh.addColor(c);
 		ptsMesh.addVertex(me->pos);
 	}
 }
@@ -144,27 +170,29 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 	for(int i = 0; i < n; i++) {
 
 		Node* me = chosenNodes[i]; //each node repells each other, ALL NODES!
-		for(int l = 1; l < n; l++) {
-			Node* me2 = chosenNodes[l];
-			me->addRepulsion(me2, REPULSION_FORCE, REPULSION_DIST, 0.7);
-			me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, 0.7);
+		if(repellNN){
+			for(int l = 0; l < n; l++) {
+				if (i != l){
+					Node* me2 = chosenNodes[l];
+					me->addRepulsion(me2, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
+					me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
+				}
+			}
 		}
-
 
 		int numChild = me->children.size();
 
 		for( int j = 0; j < numChild; j++ ){
 
 			Node* ch1 = me->children[j];
-			ch1->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST); // I repel my own children
+			ch1->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelMyChildrenGain); // I repel my own children
+			me->addRepulsion(ch1, REPULSION_FORCE, REPULSION_DIST, repelMyChildrenGain ); // I repel my own children
 
 			if (!me->softLeaf){ //if not a leaf, apply forces children to to children
-
-				for( int k = 1; k < numChild; k++ ){
-
+				for( int k = 0; k < numChild; k++ ){
 					Node* ch2 = me->children[k];
-					ch1->addRepulsion(ch2, REPULSION_FORCE, REPULSION_DIST); // my children repel each other
-					ch2->addRepulsion(ch1, REPULSION_FORCE, REPULSION_DIST);
+					ch1->addRepulsion(ch2, REPULSION_FORCE, REPULSION_DIST * repelChildChildDistGain, repelChildChildGain); // my children repel each other
+					ch2->addRepulsion(ch1, REPULSION_FORCE, REPULSION_DIST * repelChildChildDistGain, repelChildChildGain); // my children repel each other
 				}
 			}
 		}
@@ -357,7 +385,6 @@ void testApp::parseTXT(string file, vector<Node*> &list){
 }
 
 
-
 void testApp::update(){
 
 	OFX_REMOTEUI_SERVER_UPDATE(DT);
@@ -367,9 +394,22 @@ void testApp::update(){
 	if (updateMesh){
 		lines.clear();
 		nodes.clear();
+
+		//reset forces
+		int n = chosenNodes.size();
+		for(int i = 0; i < n; i++) {
+			chosenNodes[i]->resetForce(); //once we filld the mesh, we are done
+		}
+
+		TIME_SAMPLE_START("calcForces");
 		calcForces(chosenNodes, springs);
+		TIME_SAMPLE_STOP("calcForces");
 		updateNodeForces(chosenNodes);
+
+		TIME_SAMPLE_START("fillMesh");
 		fillMesh(chosenNodes, lines, nodes);
+		TIME_SAMPLE_STOP("fillMesh");
+
 	}
 
 	TIME_SAMPLE_STOP("update");
@@ -402,12 +442,14 @@ void testApp::draw(){
 	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 	gpuBlur.blur(&cleanImgFBO, &blurOutputFBO, &blurTempFBO, &blurTempFBO2, blurIterations, blurOffset);
 
-	//draw it all
+	//draw clean scene
+	ofClear(0, 0, 0, 0);
 	ofSetColor(255);
 	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 	cleanImgFBO.getTextureReference().draw(0, cleanImgFBO.getHeight(), cleanImgFBO.getWidth(), -cleanImgFBO.getHeight());
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 
+	//overlay the blur
 	ofSetColor(blurOverlayGain);
 	for(int i = 0; i < numBlurOverlays; i++){
 		blurOutputFBO.getTextureReference().draw(0, blurOutputFBO.getHeight(), blurOutputFBO.getWidth(), -blurOutputFBO.getHeight());
@@ -418,15 +460,32 @@ void testApp::draw(){
 		ofSetColor(255, lineAlpha);
 		lines.draw();
 		if(drawNames){
-			ofSetColor(255, 32);
+			ofSetColor(255, 255 * nameAlpha);
 			for(int i = 0; i < chosenNodes.size(); i++){
-				ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
+				if (chosenNodes[i]->children.size() > nameFilter){
+					ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
+				}
 			}
+		}
+		ofSetColor(255);
+		ofDrawBitmapString("ROOT", treeRoot->pos);
+
+		if (drawForces){
+			forces.clear();
+			int n = chosenNodes.size();
+			for(int i = 0; i < n; i++) {
+				forces.addColor(ofColor(255,0,0));
+				forces.addVertex(chosenNodes[i]->pos);
+				forces.addColor(ofColor(255,0,0,0));
+				forces.addVertex(chosenNodes[i]->pos + chosenNodes[i]->force * 0.1);
+			}
+			forces.draw();
 		}
 	cam.end();
 
 	TIME_SAMPLE_STOP("draw");
 
+	ofSetColor(33);
 	TIME_SAMPLE_DRAW_TOP_LEFT();
 }
 

@@ -52,6 +52,7 @@ class testApp : public ofBaseApp{
 
 		ofMesh lines;
 		ofMesh nodes;
+		ofMesh forces;
 
 		ofEasyCam cam;
 
@@ -61,11 +62,20 @@ class testApp : public ofBaseApp{
 		float REPULSION_DIST;
 		float FRICTION;
 	bool drawNames;
+	int nameFilter;
 	bool updateMesh;
+	bool repellNN;
+	float repelNNGain;
+	float repelMyChildrenGain;
+	float repelChildChildGain;
+	float repelChildChildDistGain;
+	bool drawForces;
 
 	float lineWidth;
 	float pointSize;
-	int lineAlpha;
+	float lineAlpha;
+	float pointAlpha;
+	float nameAlpha;
 
 		int blurIterations;
 		float blurOffset;

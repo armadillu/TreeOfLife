@@ -17,7 +17,9 @@ void Spring::applyForces(){
 	}
 	
 	float theirDistance = (a->pos - b->pos).length();
-	float SpringForce = ((*springiness) * (*distance - theirDistance));
+	float factor = 1;
+	if (a->softLeaf || b->softLeaf) factor = 0.1 ;
+	float SpringForce = ((*springiness) * (*distance * factor - theirDistance));
 	//if (SpringForce > 0.01 * (*distance)) SpringForce = 0.01 * (*distance);
 	ofVec3f frcToAdd = (a->pos - b->pos).normalized() * SpringForce;
 
