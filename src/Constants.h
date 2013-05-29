@@ -13,9 +13,9 @@
 #define	FATHER_CHILDREN_SEPARATOR	'$'
 #define DT							0.01666f
 
-#define	ALPHA						64
+#define	ALPHA						255
 
-#define TREE_DEPTH					6
+#define TREE_DEPTH					7
 
 struct Node{
 	Node(int ID_, int parentID_, string name_, string parentName_ = ""){
@@ -23,21 +23,22 @@ struct Node{
 		ID = ID_;
 		parentID = parentID_;
 		parentName = parentName_;
-		float r = 10;
+		float r = 500;
 		pos.x = ofRandom(-r,r) ;+ ofGetWidth() / 2;
 		pos.y = ofRandom(-r,r) ;+ ofGetHeight() / 2;
+		pos.z = ofRandom(-r,r) ;+ ofGetHeight() / 2;
 		softLeaf = true;
 		fixed = false;
 	};
 
 	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
-		ofVec2f vec = (pos - other->pos);
+		ofVec3f vec = (pos - other->pos);
 		float dist = vec.length();
 		if (dist < repDist){
 			float percent = 1.0f - (dist / repDist);
-			percent *= percent;
+			//percent *= percent ;
 			vec.normalize();
-			addForce( ofVec2f( vec * repForce * scale * percent) );
+			addForce( ofVec3f( vec * repForce * scale * percent) );
 		}
 	}
 
@@ -57,6 +58,8 @@ struct Node{
 	ofVec3f pos;
 	ofVec3f vel;
 	ofVec3f force;
+	ofColor color;
+	ofColor colorSoft;
 	vector<Node*> children;
 	vector<Node*> parents;
 	vector<string> parentNames;

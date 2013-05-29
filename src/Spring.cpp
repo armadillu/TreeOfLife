@@ -18,8 +18,9 @@ void Spring::applyForces(){
 	
 	float theirDistance = (a->pos - b->pos).length();
 	float SpringForce = ((*springiness) * (*distance - theirDistance));
-	ofVec2f frcToAdd = (a->pos - b->pos).normalized() * SpringForce;
-	
+	//if (SpringForce > 0.01 * (*distance)) SpringForce = 0.01 * (*distance);
+	ofVec3f frcToAdd = (a->pos - b->pos).normalized() * SpringForce;
+
 	a->addForce(frcToAdd);
 	b->addForce(-frcToAdd);
 }

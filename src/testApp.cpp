@@ -7,7 +7,7 @@ void testApp::setup(){
 	ofEnableAlphaBlending();
 	glDisable(GL_POINT_SMOOTH);
 
-	ofBackground(22);
+	ofBackground(0);
 
 	SPRING_LENGTH = 30;
 	SPRING_FORCE = 90;
@@ -17,12 +17,18 @@ void testApp::setup(){
 
 	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
 
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_FORCE, 0, 200);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 100);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_FORCE, 1, 200);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 1, 500);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 0, 500);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_DIST, 1, 500);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawNames);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
+
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,255,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineWidth, 0.1, 10);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointSize, 1, 30);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineAlpha, 1, 255);
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,255,32) ); // set a bg color for the upcoming params
@@ -30,8 +36,6 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurOffset, 0.0, 10);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurOverlayGain, 0, 255);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(numBlurOverlays, 0, 4);
-
-
 
 	OFX_REMOTEUI_SERVER_LOAD_FROM_XML();
 
@@ -49,13 +53,12 @@ void testApp::setup(){
 	TIME_SAMPLE_START("buildTree");
 	treeRoot = (Node*)buildTree(nodesByName);
 	treeRoot->fixed = true;
+	treeRoot->color = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 	TIME_SAMPLE_STOP("buildTree");
 
 
 	lines.setMode(OF_PRIMITIVE_LINES);
 	nodes.setMode(OF_PRIMITIVE_POINTS);
-	glPointSize(10);
-	ofSetLineWidth(2);
 
 	int len = 100;
 	int level = 0;
@@ -100,8 +103,11 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 		return;
 	}
 	node->softLeaf = false;
+	ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 	for(int i = 0; i < n; i++) {
 		Node* child = node->children[i];
+		child->color = c;
+		child->colorSoft = child->color * 0.15;
 		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRING_FORCE);
 		springs.push_back(s);
 		recursiveFillVectorAndSprings(child, level, maxLevel, chosenNodes, springs);
@@ -119,15 +125,14 @@ void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & 
 			//ofSeedRandom(me->level + 1 ); //force repeated random sequence TODO
 			//ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 			for(int j = 0; j < nn; j++) {
-				//lines.addColor(c);
+				lines.addColor(me->colorSoft);
 				lines.addVertex( me->pos );
-				//lines.addColor(c);
+				lines.addColor(me->children[j]->colorSoft);
 				lines.addVertex( me->children[j]->pos );
 			}
 		}
-		ofSeedRandom(me->level);
-		ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
-		ptsMesh.addColor(c);
+		//ofSeedRandom(me->level);
+		ptsMesh.addColor(me->color);
 		ptsMesh.addVertex(me->pos);
 	}
 }
@@ -359,14 +364,13 @@ void testApp::update(){
 
 	TIME_SAMPLE_START("update");
 
-	int level = 0;
-	int maxLevel = 3;
-	lines.clear();
-	nodes.clear();
-
-	calcForces(chosenNodes, springs);
-	updateNodeForces(chosenNodes);
-	fillMesh(chosenNodes, lines, nodes);
+	if (updateMesh){
+		lines.clear();
+		nodes.clear();
+		calcForces(chosenNodes, springs);
+		updateNodeForces(chosenNodes);
+		fillMesh(chosenNodes, lines, nodes);
+	}
 
 	TIME_SAMPLE_STOP("update");
 }
@@ -374,25 +378,22 @@ void testApp::update(){
 
 void testApp::draw(){
 
+	glPointSize(pointSize);
+	ofSetLineWidth(lineWidth);
 
 	TIME_SAMPLE_START("draw");
 
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	//draw into fbo
+	ofSetColor(255);
 	cleanImgFBO.begin();
-		ofClear(22, 22, 22, 255);
+		ofClear(0, 0, 0, 0);
 		cam.begin();
 
-			ofSetColor(255, 32);
-			lines.draw();
+//			ofSetColor(255, ALPHA * 0.5);
+//			lines.draw();
 			nodes.draw();
 
-	if(drawNames){
-		ofSetColor(255, 32);
-		for(int i = 0; i < chosenNodes.size(); i++){
-			ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
-		}
-	}
 		cam.end();
 	cleanImgFBO.end();
 
@@ -401,15 +402,28 @@ void testApp::draw(){
 	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 	gpuBlur.blur(&cleanImgFBO, &blurOutputFBO, &blurTempFBO, &blurTempFBO2, blurIterations, blurOffset);
 
-	//draw all
+	//draw it all
 	ofSetColor(255);
 	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 	cleanImgFBO.getTextureReference().draw(0, cleanImgFBO.getHeight(), cleanImgFBO.getWidth(), -cleanImgFBO.getHeight());
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
+
 	ofSetColor(blurOverlayGain);
 	for(int i = 0; i < numBlurOverlays; i++){
 		blurOutputFBO.getTextureReference().draw(0, blurOutputFBO.getHeight(), blurOutputFBO.getWidth(), -blurOutputFBO.getHeight());
 	}
+
+	//draw the lines after?
+	cam.begin();
+		ofSetColor(255, lineAlpha);
+		lines.draw();
+		if(drawNames){
+			ofSetColor(255, 32);
+			for(int i = 0; i < chosenNodes.size(); i++){
+				ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
+			}
+		}
+	cam.end();
 
 	TIME_SAMPLE_STOP("draw");
 

@@ -61,6 +61,11 @@ class testApp : public ofBaseApp{
 		float REPULSION_DIST;
 		float FRICTION;
 	bool drawNames;
+	bool updateMesh;
+
+	float lineWidth;
+	float pointSize;
+	int lineAlpha;
 
 		int blurIterations;
 		float blurOffset;
