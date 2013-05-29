@@ -15,7 +15,7 @@
 
 #define	ALPHA						255
 
-#define TREE_DEPTH					6
+#define TREE_DEPTH					5
 
 struct Node{
 	Node(int ID_, int parentID_, string name_, string parentName_ = ""){

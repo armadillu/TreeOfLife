@@ -27,7 +27,7 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelNNGain, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelMyChildrenGain, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildGain, 0, 1);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildDistGain, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildDistGain, 0, 10);
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255) ); // set a bg color for the upcoming params
@@ -290,12 +290,13 @@ void testApp::draw(){
 		ofDrawBitmapString("ROOT", treeRoot->pos);
 
 		if (drawForces){
+			glLineWidth(2);
 			forces.clear();
 			int n = chosenNodes.size();
 			for(int i = 0; i < n; i++) {
-				forces.addColor(ofColor(255,0,0));
+				forces.addColor(ofColor(128,0,0));
 				forces.addVertex(chosenNodes[i]->pos);
-				forces.addColor(ofColor(255,0,0,0));
+				forces.addColor(ofColor(128,0,0,0));
 				forces.addVertex(chosenNodes[i]->pos + chosenNodes[i]->force * 0.1);
 			}
 			forces.draw();
