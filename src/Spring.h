@@ -9,14 +9,15 @@ class Spring {
 
 	public:
 
-		Spring(Node * a, Node * b, float *springLen, float *springForce);
+		Spring(Node * a, Node * b, float *springLen,
+			   float *springForce );
 
 		Node *a;
 		Node *b;
 
-		float *distance;
+		float *springLen;
 		float *springiness;	 // this is the k, Springiness constant
-	
+
 		void applyForces();
 
 };

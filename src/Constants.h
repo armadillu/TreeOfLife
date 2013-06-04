@@ -11,11 +11,11 @@
 
 
 #define	FATHER_CHILDREN_SEPARATOR	'$'
-#define DT							0.01666f
+#define DT							0.1666f
 
 #define	ALPHA						255
 
-#define TREE_DEPTH					5
+#define TREE_DEPTH					4
 
 struct Node{
 	Node(int ID_, int parentID_, string name_, string parentName_ = ""){
@@ -28,12 +28,27 @@ struct Node{
 	};
 
 	void setRandomPosAccordingToLevel(){
-		float r = level * 150;
-		float a1 = ofRandom(2*M_PI);
-		float a2 = ofRandom(2*M_PI);
+		float r = level * 50;
+		//r = ofRandom(500);
+		float a1 = ofRandom(M_PI*2);
+		float a2 = ofRandom(M_PI*2);
 		pos.x = r * cos(a1) * sin(a2) ;
 		pos.y = r * sin(a1) * sin(a2) ;
 		pos.z = r * cos(a2) ;
+	}
+
+	void spreadGivenFatherAndDirection(ofVec3f fatherPos, ofVec3f dir, float variation){
+		float r = 50;
+		float v1 = ofRandom(-variation, variation);
+		float v2 = ofRandom(-variation, variation);
+//		float yaw = dir.angleRad(ofVec3f(0, 1, 0));
+//		float pitch = dir.angleRad(ofVec3f(1, 0, 0));
+		//float a1 = atan(dir.y / dir.x);
+		//float a2 = acos(dir.z / dir.length());
+//		pos.x = fatherPos.x + r * cos(yaw+v1) * cos(pitch+v2);
+//		pos.y = fatherPos.y + r * sin(yaw+v1) * cos(pitch+v2);
+//		pos.z = fatherPos.z + r * sin(pitch+v1);
+		pos = fatherPos + dir.rotated(v1, v2, 0);
 	}
 
 	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
@@ -50,20 +65,29 @@ struct Node{
 		force += f;
 	};
 
+	void addSpringForce(const ofVec3f &f ){
+		addForce(f);
+		springForces.push_back(f);
+	};
+
 	void applyForces(float dt, float fr){
-		if(fixed) return;
-		vel = vel + force * dt;
-		pos = pos + vel * dt;
+		vel = vel + force ;
 		vel *= fr;
+		if(fixed) return;
+		pos = pos + vel ;
 	}
 
 	void resetForce(){
 		force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
+		vel.x = vel.y = vel.z = 0.0f;
+		//springForce.x = 0.0f, springForce.y = 0.0f, springForce.z = 0.0f;
+		springForces.clear();
 	}
 	
 	ofVec3f pos;
 	ofVec3f vel;
 	ofVec3f force;
+	vector<ofVec3f> springForces;
 	ofColor color;
 	ofColor colorSoft;
 	vector<Node*> children;

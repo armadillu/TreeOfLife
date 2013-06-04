@@ -55,25 +55,30 @@ class testApp : public ofBaseApp{
 		ofEasyCam cam;
 
 		float SPRING_LENGTH;
-		float SPRING_FORCE;
+		float SPRINGINESS;
 		float REPULSION_FORCE;
 		float REPULSION_DIST;
+		float CHILD_REPULSION_DIST;
 		float FRICTION;
 		bool drawNames;
 		int nameFilter;
 		bool updateMesh;
 		bool repellNN;
 		float repelNNGain;
+		float repelRootGain;
 		float repelMyChildrenGain;
 		float repelChildChildGain;
-		float repelChildChildDistGain;
+		float gravityGain;
 		bool drawForces;
-
+		bool drawSpringForces;
+	bool drawSpheres;
 		float lineWidth;
 		float pointSize;
 		float lineAlpha;
 		float pointAlpha;
 		float nameAlpha;
+
+		float treeSpread;
 
 		int blurIterations;
 		float blurOffset;
@@ -82,4 +87,6 @@ class testApp : public ofBaseApp{
 
 		ofFboBlur gpuBlur;
 
+		int level;
+		int pLevel;
 };

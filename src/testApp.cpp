@@ -6,28 +6,37 @@ void testApp::setup(){
 	ofSetVerticalSync(true);
 	ofEnableAlphaBlending();
 	glDisable(GL_POINT_SMOOTH);
+	ofSetSphereResolution(12);
 
 	ofBackground(0);
 
 	SPRING_LENGTH = 30;
-	SPRING_FORCE = 90;
+	SPRINGINESS = 90;
 	REPULSION_FORCE = 50;
 	REPULSION_DIST = 180;
 	FRICTION = 0.95;
 
 	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
 
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_FORCE, 0, 100);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 100);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 0, 100);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_DIST, 1, 500);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1);
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(128,255,0,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(level, 3, 12);
+
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRINGINESS, 0, 0.05);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 500);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 0, 2);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_DIST, 1, 1500);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(CHILD_REPULSION_DIST, 1, 300);
+
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1.0);
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,128,32) ); // set a bg color for the upcoming params
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelNNGain, 0, 1);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelNNGain, 0, 2);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelMyChildrenGain, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildGain, 0, 1);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildDistGain, 0, 10);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelRootGain, 0, 10);
+
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,255,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 45);
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255) ); // set a bg color for the upcoming params
@@ -36,6 +45,11 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repellNN);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpringForces);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpheres);
+
+
+
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,255,32) ); // set a bg color for the upcoming params
@@ -58,29 +72,29 @@ void testApp::setup(){
 	printf("INT_MAX: %d\n######################\n", INT_MAX);
 
 	TIME_SAMPLE_DISABLE_AVERAGE();
-	TIME_SAMPLE_START("parseCSV");
+	//TIME_SAMPLE_START("parseCSV");
 	parser.parseCSV( ofToDataPath("pruned-names.csv"), speciesAll );
-	TIME_SAMPLE_STOP("parseCSV");
+	//TIME_SAMPLE_STOP("parseCSV");
 
-	TIME_SAMPLE_START("filterDuplicates");
+	//TIME_SAMPLE_START("filterDuplicates");
 	parser.filterDuplicates(speciesAll, nodesByName);
-	TIME_SAMPLE_STOP("filterDuplicates");
+	//TIME_SAMPLE_STOP("filterDuplicates");
 
-	TIME_SAMPLE_START("buildTree");
+	//TIME_SAMPLE_START("buildTree");
 	treeRoot = (Node*)parser.buildTree(nodesByName);
-	//treeRoot->fixed = true;
+	treeRoot->fixed = true;
 	treeRoot->color = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
-	TIME_SAMPLE_STOP("buildTree");
-
+	//TIME_SAMPLE_STOP("buildTree");
 
 	lines.setMode(OF_PRIMITIVE_LINES);
 	nodes.setMode(OF_PRIMITIVE_POINTS);
 	forces.setMode(OF_PRIMITIVE_LINES);
 
-	int len = 100;
-	int level = 0;
-	int maxLevel = TREE_DEPTH;
-	recursiveFillVectorAndSprings(treeRoot, level, maxLevel, chosenNodes, springs);
+	int thisLevel = 0;
+	int maxLevel = level;
+	pLevel = level;
+	treeRoot->pos = ofVec3f();
+	recursiveFillVectorAndSprings(treeRoot, thisLevel, maxLevel, chosenNodes, springs);
 	cout << "chosenNodes at maxLevel " << maxLevel << " : " << chosenNodes.size() << endl;
 	cout << "num Springs: " << springs.size() << endl;
 
@@ -139,12 +153,21 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 	for(int i = 0; i < n; i++) {
 
 		Node* me = chosenNodes[i]; //each node repells each other, ALL NODES!
+
+		
+		//me->addForce( ofVec3f(0, gravityGain, 0) );
+		//if (me->level < 3){
+			me->addRepulsion(treeRoot, REPULSION_FORCE, REPULSION_DIST * 100000, repelRootGain);
+		//}
+
 		if(repellNN){
 			for(int l = 0; l < n; l++) {
 				if (i != l){
 					Node* me2 = chosenNodes[l];
-					me->addRepulsion(me2, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
-					me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
+					if ( me != treeRoot && me2 != treeRoot){
+						me->addRepulsion(me2, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
+						me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
+					}
 				}
 			}
 		}
@@ -154,14 +177,14 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 		for( int j = 0; j < numChild; j++ ){
 
 			Node* ch1 = me->children[j];
-			ch1->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelMyChildrenGain); // I repel my own children
-			me->addRepulsion(ch1, REPULSION_FORCE, REPULSION_DIST, repelMyChildrenGain ); // I repel my own children
+			ch1->addRepulsion(me, REPULSION_FORCE, CHILD_REPULSION_DIST, repelMyChildrenGain); // I repel my own children
+			me->addRepulsion(ch1, REPULSION_FORCE, CHILD_REPULSION_DIST, repelMyChildrenGain ); // I repel my own children
 
 			if (!me->softLeaf){ //if not a leaf, apply forces children to to children
 				for( int k = 0; k < numChild; k++ ){
 					Node* ch2 = me->children[k];
-					ch1->addRepulsion(ch2, REPULSION_FORCE, REPULSION_DIST * repelChildChildDistGain, repelChildChildGain); // my children repel each other
-					ch2->addRepulsion(ch1, REPULSION_FORCE, REPULSION_DIST * repelChildChildDistGain, repelChildChildGain); // my children repel each other
+					ch1->addRepulsion(ch2, REPULSION_FORCE, CHILD_REPULSION_DIST, repelChildChildGain); // my children repel each other
+					ch2->addRepulsion(ch1, REPULSION_FORCE, CHILD_REPULSION_DIST, repelChildChildGain); // my children repel each other
 				}
 			}
 		}
@@ -178,9 +201,14 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 void testApp::updateNodeForces(vector<Node*> &chosenNodes){
 
 	int n = chosenNodes.size();
-	for(int i = 0; i < n; i++) {
+//	for(int i = 0; i < n; i++) {
+//		chosenNodes[i]->applyForces(DT, FRICTION);
+//	}
+
+	for(int i = n-1; i >= 0; i--) {
 		chosenNodes[i]->applyForces(DT, FRICTION);
 	}
+
 }
 
 
@@ -191,7 +219,8 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 	int n = node->children.size();
 	level++;
 	node->level = level;
-	node->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
+	ofVec2f angles;
+	//node->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
 	if (level >= maxLevel){
 		node->softLeaf = true;
 		level--;
@@ -201,9 +230,16 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLeve
 	ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 	for(int i = 0; i < n; i++) {
 		Node* child = node->children[i];
-		child->color = c;;
-		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRING_FORCE);
+		child->color = c;
+		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRINGINESS);
 		springs.push_back(s);
+		if (node == treeRoot){
+			child->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
+		}else{
+			ofVec3f dir = node->pos - node->parents[0]->pos;
+			child->spreadGivenFatherAndDirection(node->pos, dir, treeSpread );
+		}
+
 		recursiveFillVectorAndSprings(child, level, maxLevel, chosenNodes, springs);
 	}
 	level--;
@@ -216,7 +252,24 @@ void testApp::update(){
 
 	TIME_SAMPLE_START("update");
 
-	if (updateMesh){
+	bool newTree = false;
+	if (level != pLevel){
+		newTree = true;
+		for(int i = 0; i < springs.size(); i++) {
+			delete springs[i];
+		}
+		springs.clear();
+		chosenNodes.clear();
+		
+		int thisLevel = 0;
+		int maxLevel = level;
+		recursiveFillVectorAndSprings(treeRoot, thisLevel, maxLevel, chosenNodes, springs);
+		cout << "chosenNodes at maxLevel " << maxLevel << " : " << chosenNodes.size() << endl;
+		cout << "num Springs: " << springs.size() << endl;
+		pLevel = level;
+	}
+
+	if (updateMesh || newTree){
 		lines.clear();
 		nodes.clear();
 
@@ -245,6 +298,7 @@ void testApp::draw(){
 
 	glPointSize(pointSize);
 	ofSetLineWidth(lineWidth);
+	cam.setFarClip(10000);
 
 	TIME_SAMPLE_START("draw");
 
@@ -293,29 +347,47 @@ void testApp::draw(){
 			glLineWidth(2);
 			forces.clear();
 			int n = chosenNodes.size();
+			float gain = 10;
 			for(int i = 0; i < n; i++) {
+				//normal
 				forces.addColor(ofColor(128,0,0));
 				forces.addVertex(chosenNodes[i]->pos);
 				forces.addColor(ofColor(128,0,0,0));
-				forces.addVertex(chosenNodes[i]->pos + chosenNodes[i]->force * 0.1);
+				forces.addVertex(chosenNodes[i]->pos + chosenNodes[i]->force * gain * 10);
+
+				//spring
+				if (drawSpringForces){
+					for(int k = 0; k < chosenNodes[i]->springForces.size(); k++ ){
+						forces.addColor(ofColor(128,128,0));
+						forces.addVertex(chosenNodes[i]->pos);
+						forces.addColor(ofColor(128,128,0,0));
+						forces.addVertex(chosenNodes[i]->pos + chosenNodes[i]->springForces[k] * gain);
+					}
+				}
 			}
 			forces.draw();
 		}
+	ofEnableAlphaBlending();
+	if(drawSpheres){
+		ofSetColor(255,12);
+		ofNoFill();
+		glLineWidth(1);
+		for(int i = 0; i < level; i++){
+			ofSphere(treeRoot->pos, 100*i);
+		}
+	}
 	cam.end();
 
 	TIME_SAMPLE_STOP("draw");
 
-	ofSetColor(33);
+	ofSetColor(64);
 	TIME_SAMPLE_DRAW_TOP_LEFT();
 }
 
 
 void testApp::keyPressed(int key){
 
-	int n = chosenNodes.size();
-	for(int i = 0; i < n; i++) {
-		chosenNodes[i]->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
-	}
+	pLevel = -1;
 }
 
 
