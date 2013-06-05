@@ -10,6 +10,10 @@
 
 // missing name "WTF_BUG" !!
 
+#define DRAW_3D		false
+#define DRAW_CONE	false
+#define DRAW_2D		true
+
 class testApp : public ofBaseApp{
 	
 	public:
@@ -37,6 +41,9 @@ class testApp : public ofBaseApp{
 		void updateNodeForces(vector<Node*> &chosenNodes);
 		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh);
 
+		void gatherLeaves(const vector<Node*> &nodes, vector<Node*> &leaves);
+		void calPositions( Node * );
+		int countChildren( Node * );
 
 		Parser parser;
 
@@ -44,13 +51,18 @@ class testApp : public ofBaseApp{
 		map<string, Node*> nodesByName;
 
 		vector<Node*> chosenNodes;
+		vector<Node*> softLeaves;
 		vector<Spring*> springs;
+		vector<ofColor> colors;
 
 		Node* treeRoot;
 
 		ofMesh lines[NUM_LINE_MESHES];
 		ofMesh nodes;
 		ofMesh forces;
+
+		ofMesh line2d;
+		ofMesh point2d;
 
 		ofEasyCam cam;
 

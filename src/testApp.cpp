@@ -16,6 +16,10 @@ void testApp::setup(){
 	REPULSION_DIST = 180;
 	FRICTION = 0.95;
 
+	for(int i = 0; i < 1000; i++){
+		colors.push_back( ofColor(ofRandom(255), ofRandom(255), ofRandom(255)) );
+	}
+
 	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(128,255,0,32) ); // set a bg color for the upcoming params
@@ -90,13 +94,11 @@ void testApp::setup(){
 	nodes.setMode(OF_PRIMITIVE_POINTS);
 	forces.setMode(OF_PRIMITIVE_LINES);
 
-	int thisLevel = 0;
-	int maxLevel = level;
-	pLevel = level;
-	treeRoot->pos = ofVec3f();
-	recursiveFillVectorAndSprings(treeRoot, thisLevel, maxLevel, chosenNodes, springs);
-	cout << "chosenNodes at maxLevel " << maxLevel << " : " << chosenNodes.size() << endl;
-	cout << "num Springs: " << springs.size() << endl;
+	pLevel = -1;
+//	treeRoot->pos = ofVec3f();
+//	recursiveFillVectorAndSprings(treeRoot, thisLevel, maxLevel, chosenNodes, springs);
+//	cout << "chosenNodes at maxLevel " << maxLevel << " : " << chosenNodes.size() << endl;
+//	cout << "num Springs: " << springs.size() << endl;
 
 
 	// blur ///////////////////////////
@@ -113,7 +115,6 @@ void testApp::setup(){
 	s.useStencil = false;
 
 	gpuBlur.setup(s);
-
 	
 }
 
@@ -128,13 +129,13 @@ void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh){
 			//ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 			for(int j = 0; j < nn; j++) {
 				int lev = me->children[j]->level;
-				float percent = 0.2 + 0.8 * ( (level - lev) / (float)level ); // 0.4 fixed alpha, up tp +0.6 depending on level
+				//float percent = 0.2 + 0.8 * ( (level - lev) / (float)level ); // 0.4 fixed alpha, up tp +0.6 depending on level
 				ofColor c1 = me->color;
-				c1 *= lineAlpha * percent;
+				c1 *= lineAlpha ;
 				lines[lev].addColor( c1 * lineAlpha);
 				lines[lev].addVertex( me->pos );
 				ofColor c2 = me->children[j]->color;
-				c2 *= lineAlpha * percent;
+				c2 *= lineAlpha ;
 				lines[lev].addColor(c2);
 				lines[lev].addVertex( me->children[j]->pos );
 			}
@@ -214,37 +215,119 @@ void testApp::updateNodeForces(vector<Node*> &chosenNodes){
 }
 
 
-
-void testApp::recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel, vector<Node*> &chosenNodes, vector<Spring*> &springs){
+void testApp::recursiveFillVectorAndSprings(Node * node, int &cLevel, int maxLevel, vector<Node*> &chosenNodes, vector<Spring*> &springs){
 
 	chosenNodes.push_back(node);
 	int n = node->children.size();
-	level++;
-	node->level = level;
-	ofVec2f angles;
+	cLevel++;
+	node->level = cLevel;
 	//node->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
-	if (level >= maxLevel){
+	if (cLevel >= maxLevel){
 		node->softLeaf = true;
-		level--;
+		cLevel--;
 		return;
 	}
 	node->softLeaf = false;
-	ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
+
 	for(int i = 0; i < n; i++) {
 		Node* child = node->children[i];
-		child->color = c;
-		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRINGINESS);
-		springs.push_back(s);
-		if (node == treeRoot){
-			child->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
-		}else{
-			ofVec3f dir = node->pos - node->parents[0]->pos;
-			child->spreadGivenFatherAndDirection(node->pos, dir, treeSpread );
-		}
 
-		recursiveFillVectorAndSprings(child, level, maxLevel, chosenNodes, springs);
+//		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRINGINESS);
+//		springs.push_back(s);
+
+		recursiveFillVectorAndSprings(child, cLevel, maxLevel, chosenNodes, springs);
 	}
-	level--;
+	cLevel--;
+}
+
+
+void testApp::gatherLeaves( const vector<Node*> &nodes, vector<Node*> &leaves){
+
+	leaves.clear();
+	for (int i = 0; i < nodes.size(); i++) {
+		if(nodes[i]->softLeaf){
+			leaves.push_back(nodes[i]);
+		}
+	}
+
+	for (int i = 0; i < leaves.size(); i++) {
+		Node* me = leaves[i];
+		me->deepestLevel = me->level;
+		int deepestLevel = me->level;
+		while (me->parents.size() > 0) {
+			me = me->parents[0];
+			if (me->deepestLevel < deepestLevel) me->deepestLevel = deepestLevel;			
+		}
+	}
+}
+
+int testApp::countChildren( Node * node ){
+	
+	if (node->softLeaf){
+		node->totalChildren = 0;
+		return 0;
+	}
+
+	int n = node->children.size();
+	int nc = n;
+
+	for(int i = 0; i < n; i++) {
+		Node* child = node->children[i];
+		nc += countChildren(child);
+	}
+	node->totalChildren = nc;
+	return nc;
+}
+
+
+void testApp::calPositions( Node * node){
+
+	int n = node->children.size();
+
+	if (node->softLeaf){
+		node->color = ofColor::blue;
+		return;
+	}
+
+	int off = 0;
+	int unit = 5;
+	int totalW = node->totalChildren * unit;
+
+	for(int i = 0; i < n; i++) {
+
+		Node* child = node->children[i];
+
+		//float percent = (i) / (float)(n-1);
+
+//#if DRAW_3D
+//
+//		if (node == treeRoot){
+//			child->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
+//		}else{
+//			ofVec3f dir = node->pos - node->parents[0]->pos;
+//			child->spreadGivenFatherAndDirection(node->pos, dir, treeSpread );
+//		}
+//#endif
+//
+//#if DRAW_CONE
+//		child->pos = ofVec3f(
+//							 percent * unit * cLevel * cos( M_PI * 2 * percent),
+//							 - hUnit * cLevel - hUnit * percent,
+//							 percent * unit * cLevel * sin( M_PI * 2 * percent)
+//							 );
+//#endif
+
+
+		child->color = ofColor::red;
+		off += unit * child->totalChildren;
+		child->pos = node->pos + ofVec3f(
+										 off - totalW/2,
+										 -node->level * 50,
+										 0 //r * sin( parentAngle + M_PI * 2 * percent)
+										 );
+
+		calPositions(child);
+	}
 }
 
 
@@ -262,13 +345,22 @@ void testApp::update(){
 		}
 		springs.clear();
 		chosenNodes.clear();
-		
+		for(int i = 0; i < speciesAll.size(); i++) {
+			speciesAll[i]->deepestLevel = 0;
+			speciesAll[i]->totalChildren = 0;
+		}
+
 		int thisLevel = 0;
 		int maxLevel = level;
 		recursiveFillVectorAndSprings(treeRoot, thisLevel, maxLevel, chosenNodes, springs);
 		cout << "chosenNodes at maxLevel " << maxLevel << " : " << chosenNodes.size() << endl;
 		cout << "num Springs: " << springs.size() << endl;
 		pLevel = level;
+
+		gatherLeaves(chosenNodes, softLeaves);
+		countChildren(treeRoot);
+		calPositions(treeRoot);
+
 	}
 
 	if (updateMesh || newTree){
@@ -291,7 +383,6 @@ void testApp::update(){
 		TIME_SAMPLE_START("fillMesh");
 		fillMesh(chosenNodes, nodes);
 		TIME_SAMPLE_STOP("fillMesh");
-
 	}
 
 	TIME_SAMPLE_STOP("update");
@@ -338,18 +429,21 @@ void testApp::draw(){
 		for(int i = 0; i <= level; i++){
 			float percent = (level - i) / (float)(level + 1);
 			glLineWidth(1 + lineWidth * percent);
+			//glLineWidth(lineWidth);
 			lines[i].drawWireframe();
 		}
 		if(drawNames){
 			ofSetColor(255, 255 * nameAlpha);
 			for(int i = 0; i < chosenNodes.size(); i++){
-				if (chosenNodes[i]->children.size() > nameFilter){
-					ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
-				}
+				ofDrawBitmapString( ofToString(chosenNodes[i]->totalChildren) + "-"+ ofToString(chosenNodes[i]->children.size()) , chosenNodes[i]->pos);
+				//if (chosenNodes[i]->softLeaf) ofDrawBitmapString( "X", chosenNodes[i]->pos);
+//				if (chosenNodes[i]->children.size() > nameFilter){
+//					ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
+//				}
 			}
 		}
 		ofSetColor(255);
-		ofDrawBitmapString("ROOT", treeRoot->pos);
+		ofDrawBitmapString("\nROOT", treeRoot->pos);
 
 		if (drawForces){
 			glLineWidth(1);
@@ -381,9 +475,11 @@ void testApp::draw(){
 		ofNoFill();
 		glLineWidth(1);
 		for(int i = 0; i < level; i++){
-			ofSphere(treeRoot->pos, 100*i);
+			ofSphere(treeRoot->pos, 50*i);
 		}
 	}
+
+	//ofDrawAxis(50);
 	cam.end();
 
 	TIME_SAMPLE_STOP("draw");

@@ -26,6 +26,7 @@ struct Node{
 		parentName = parentName_;
 		softLeaf = true;
 		fixed = false;
+		deepestLevel = totalChildren = 0;
 	};
 
 	void setRandomPosAccordingToLevel(){
@@ -103,8 +104,11 @@ struct Node{
 	string parentName;
 	string name;
 	bool softLeaf; //if true, used as a mark that we should look for children beyond this node when drawing
-	bool fixed;
-	int level;
+	bool fixed;	//wont move
+	int level;	//your level in tree
+	int deepestLevel; //what level your children get to
+	float angle;
+	int totalChildren; // how many child + subChild
 };
 
 
