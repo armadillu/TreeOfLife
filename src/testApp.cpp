@@ -19,7 +19,7 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(128,255,0,32) ); // set a bg color for the upcoming params
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(level, 3, 12);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(level, 3, NUM_LINE_MESHES);
 
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRINGINESS, 0, 0.05);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 500);
@@ -36,19 +36,17 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelRootGain, 0, 10);
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,255,32) ); // set a bg color for the upcoming params
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 45);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 90);
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawNames);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 30);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 150);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repellNN);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpringForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpheres);
-
-
 
 
 
@@ -86,7 +84,9 @@ void testApp::setup(){
 	treeRoot->color = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 	//TIME_SAMPLE_STOP("buildTree");
 
-	lines.setMode(OF_PRIMITIVE_LINES);
+	for(int i = 0; i < NUM_LINE_MESHES; i++){
+		lines[i].setMode(OF_PRIMITIVE_LINES);
+	}
 	nodes.setMode(OF_PRIMITIVE_POINTS);
 	forces.setMode(OF_PRIMITIVE_LINES);
 
@@ -117,7 +117,7 @@ void testApp::setup(){
 	
 }
 
-void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & ptsMesh){
+void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh){
 
 	int n = chosenNodes.size();
 	for(int i = 0; i < n; i++) {
@@ -127,14 +127,16 @@ void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & 
 			//ofSeedRandom(me->level + 1 ); //force repeated random sequence TODO
 			//ofColor c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255), ALPHA);
 			for(int j = 0; j < nn; j++) {
+				int lev = me->children[j]->level;
+				float percent = 0.2 + 0.8 * ( (level - lev) / (float)level ); // 0.4 fixed alpha, up tp +0.6 depending on level
 				ofColor c1 = me->color;
-				c1 *= lineAlpha;
-				lines.addColor( c1 * lineAlpha);
-				lines.addVertex( me->pos );
+				c1 *= lineAlpha * percent;
+				lines[lev].addColor( c1 * lineAlpha);
+				lines[lev].addVertex( me->pos );
 				ofColor c2 = me->children[j]->color;
-				c2 *= lineAlpha;
-				lines.addColor(c2);
-				lines.addVertex( me->children[j]->pos );
+				c2 *= lineAlpha * percent;
+				lines[lev].addColor(c2);
+				lines[lev].addVertex( me->children[j]->pos );
 			}
 		}
 		//ofSeedRandom(me->level);
@@ -166,7 +168,7 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 					Node* me2 = chosenNodes[l];
 					if ( me != treeRoot && me2 != treeRoot){
 						me->addRepulsion(me2, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
-						me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
+						//me2->addRepulsion(me, REPULSION_FORCE, REPULSION_DIST, repelNNGain);
 					}
 				}
 			}
@@ -270,7 +272,9 @@ void testApp::update(){
 	}
 
 	if (updateMesh || newTree){
-		lines.clear();
+		for(int i = 0; i < NUM_LINE_MESHES; i++){
+			lines[i].clear();
+		}
 		nodes.clear();
 
 		//reset forces
@@ -285,7 +289,7 @@ void testApp::update(){
 		updateNodeForces(chosenNodes);
 
 		TIME_SAMPLE_START("fillMesh");
-		fillMesh(chosenNodes, lines, nodes);
+		fillMesh(chosenNodes, nodes);
 		TIME_SAMPLE_STOP("fillMesh");
 
 	}
@@ -331,7 +335,11 @@ void testApp::draw(){
 	//draw the lines after?
 	cam.begin();
 		ofSetColor(255, lineAlpha);
-		lines.draw();
+		for(int i = 0; i <= level; i++){
+			float percent = (level - i) / (float)(level + 1);
+			glLineWidth(1 + lineWidth * percent);
+			lines[i].drawWireframe();
+		}
 		if(drawNames){
 			ofSetColor(255, 255 * nameAlpha);
 			for(int i = 0; i < chosenNodes.size(); i++){
@@ -344,7 +352,7 @@ void testApp::draw(){
 		ofDrawBitmapString("ROOT", treeRoot->pos);
 
 		if (drawForces){
-			glLineWidth(2);
+			glLineWidth(1);
 			forces.clear();
 			int n = chosenNodes.size();
 			float gain = 10;

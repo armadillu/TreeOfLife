@@ -35,7 +35,7 @@ class testApp : public ofBaseApp{
 
 		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
 		void updateNodeForces(vector<Node*> &chosenNodes);
-		void fillMesh(vector<Node*> &chosenNodes, ofMesh & linesMesh, ofMesh & ptsMesh);
+		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh);
 
 
 		Parser parser;
@@ -48,7 +48,7 @@ class testApp : public ofBaseApp{
 
 		Node* treeRoot;
 
-		ofMesh lines;
+		ofMesh lines[NUM_LINE_MESHES];
 		ofMesh nodes;
 		ofMesh forces;
 
