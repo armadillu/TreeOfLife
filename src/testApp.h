@@ -42,8 +42,11 @@ class testApp : public ofBaseApp{
 		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh);
 
 		void gatherLeaves(const vector<Node*> &nodes, vector<Node*> &leaves);
-		void calPositions( Node * );
-		int countChildren( Node * );
+		void position2DTree( Node * );
+		void position3DTree( Node * );
+		void position3DConeTree( Node * );
+		void position3DConeTree2( Node * );
+		int countChildren( Node * , int &numLeaves);
 
 		Parser parser;
 
@@ -84,6 +87,8 @@ class testApp : public ofBaseApp{
 		bool drawForces;
 		bool drawSpringForces;
 	bool drawSpheres;
+	bool blurLines;
+
 		float lineWidth;
 		float pointSize;
 		float lineAlpha;

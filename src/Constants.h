@@ -109,6 +109,7 @@ struct Node{
 	int deepestLevel; //what level your children get to
 	float angle;
 	int totalChildren; // how many child + subChild
+	int totalLeaves;
 };
 
 
