@@ -48,6 +48,10 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 150);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repellNN);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(addSprings);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(calcChildForces);
+
+
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpringForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpheres);
@@ -122,6 +126,12 @@ void testApp::setup(){
 void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh){
 
 	int n = chosenNodes.size();
+
+	lines[0].addColor( treeRoot->color * lineAlpha);
+	lines[0].addVertex( treeRoot->pos );
+	lines[0].addColor( treeRoot->color * lineAlpha);
+	lines[0].addVertex( treeRoot->pos - ofVec3f(0, 30 * level,0) );
+
 	for(int i = 0; i < n; i++) {
 		Node* me = chosenNodes[i];
 		if (!me->softLeaf){
@@ -178,17 +188,19 @@ void testApp::calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs){
 
 		int numChild = me->children.size();
 
-		for( int j = 0; j < numChild; j++ ){
+		if(calcChildForces){
+			for( int j = 0; j < numChild; j++ ){
 
-			Node* ch1 = me->children[j];
-			ch1->addRepulsion(me, REPULSION_FORCE, CHILD_REPULSION_DIST, repelMyChildrenGain); // I repel my own children
-			me->addRepulsion(ch1, REPULSION_FORCE, CHILD_REPULSION_DIST, repelMyChildrenGain ); // I repel my own children
+				Node* ch1 = me->children[j];
+				ch1->addRepulsion(me, REPULSION_FORCE, CHILD_REPULSION_DIST, repelMyChildrenGain); // I repel my own children
+				me->addRepulsion(ch1, REPULSION_FORCE, CHILD_REPULSION_DIST, repelMyChildrenGain ); // I repel my own children
 
-			if (!me->softLeaf){ //if not a leaf, apply forces children to to children
-				for( int k = 0; k < numChild; k++ ){
-					Node* ch2 = me->children[k];
-					ch1->addRepulsion(ch2, REPULSION_FORCE, CHILD_REPULSION_DIST, repelChildChildGain); // my children repel each other
-					ch2->addRepulsion(ch1, REPULSION_FORCE, CHILD_REPULSION_DIST, repelChildChildGain); // my children repel each other
+				if (!me->softLeaf){ //if not a leaf, apply forces children to to children
+					for( int k = 0; k < numChild; k++ ){
+						Node* ch2 = me->children[k];
+						ch1->addRepulsion(ch2, REPULSION_FORCE, CHILD_REPULSION_DIST, repelChildChildGain); // my children repel each other
+						ch2->addRepulsion(ch1, REPULSION_FORCE, CHILD_REPULSION_DIST, repelChildChildGain); // my children repel each other
+					}
 				}
 			}
 		}
@@ -228,8 +240,10 @@ void testApp::recursiveFillVectorAndSprings(Node * node, int &cLevel, int maxLev
 	for(int i = 0; i < n; i++) {
 		Node* child = node->children[i];
 
-		Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRINGINESS);
-		springs.push_back(s);
+		if(addSprings){
+			Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRINGINESS);
+			springs.push_back(s);
+		}
 
 		recursiveFillVectorAndSprings(child, cLevel, maxLevel, chosenNodes, springs);
 	}
@@ -368,7 +382,7 @@ void testApp::position2DTree( Node * node){
 
 	int n = node->children.size();
 
-	int unit = 9;
+	int unit = 30;
 	int totalW = node->totalLeaves * unit;
 	int off = -totalW / 2;
 
@@ -389,6 +403,45 @@ void testApp::position2DTree( Node * node){
 		}else{
 			off += unit * child->totalLeaves ;
 			position2DTree(child);
+		}
+	}
+}
+
+
+void testApp::position23DTree( Node * node){
+
+	int n = node->children.size();
+
+	for(int i = 0; i < n; i++) {
+
+		Node* child = node->children[i];
+		float percent = (float)i / n;
+
+		child->color = node->color;
+		float colorVariation = 5 + 5 * (level - (node->level) / (float)level);
+		child->color.r += ofRandom(-colorVariation, colorVariation);
+		child->color.g += ofRandom(-colorVariation, colorVariation);
+		child->color.b += ofRandom(-colorVariation, colorVariation);
+
+		float minR = 10;
+		float maxR = level * 3 * treeSpread;
+		//float r = 5 * child->children.size();
+		float r = 4 * level * sqrtf(child->totalChildren);
+		r = ofClamp(r, minR, maxR);
+		int h = ofRandom(50) + 40 + 40 * child->level;
+		float ang = atan(h/r);
+		//h = h * cos(ang);
+		if (h < 30 ) h = 30;
+		float startingAngle = ofVec2f(node->pos.x, node->pos.z).angleRad( ofVec2f(1,0) );
+		float rand = 0; //ofRandom(0.3);
+		child->pos = node->pos + ofVec3f(
+										 r * cos( rand + startingAngle + M_PI * 2 * percent),
+										 h * cos(ang) ,
+										 r * sin( rand + startingAngle + M_PI * 2 * percent)
+										 );
+
+		if (!child->softLeaf){
+			position23DTree(child);
 		}
 	}
 }
@@ -423,7 +476,7 @@ void testApp::update(){
 		gatherLeaves(chosenNodes, softLeaves);
 		int numLeaves = 0;
 		countChildren(treeRoot, numLeaves);
-		position3DConeTree2(treeRoot);
+		position23DTree(treeRoot);
 
 		for(int i = 0; i < springs.size(); i++){
 			Spring * sp = springs[i];

@@ -43,6 +43,7 @@ class testApp : public ofBaseApp{
 
 		void gatherLeaves(const vector<Node*> &nodes, vector<Node*> &leaves);
 		void position2DTree( Node * );
+		void position23DTree( Node * );
 		void position3DTree( Node * );
 		void position3DConeTree( Node * );
 		void position3DConeTree2( Node * );
@@ -88,6 +89,9 @@ class testApp : public ofBaseApp{
 		bool drawSpringForces;
 	bool drawSpheres;
 	bool blurLines;
+
+	bool addSprings;
+	bool calcChildForces;
 
 		float lineWidth;
 		float pointSize;

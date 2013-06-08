@@ -9,7 +9,7 @@
 #ifndef emptyExample_Constants_h
 #define emptyExample_Constants_h
 
-#define NUM_LINE_MESHES				13
+#define NUM_LINE_MESHES				16
 
 #define	FATHER_CHILDREN_SEPARATOR	'$'
 #define DT							0.1666f
