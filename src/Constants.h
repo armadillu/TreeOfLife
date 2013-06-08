@@ -29,33 +29,6 @@ struct Node{
 		deepestLevel = totalChildren = 0;
 	};
 
-	void setRandomPosAccordingToLevel(){
-		float r = level * 50;
-		//r = ofRandom(500);
-		float a1 = ofRandom(M_PI*2);
-		float a2 = ofRandom(M_PI*2);
-		pos.x = r * cos(a1) * sin(a2) ;
-		pos.y = r * sin(a1) * sin(a2) ;
-		pos.z = r * cos(a2) ;
-	}
-
-	void spreadGivenFatherAndDirection(ofVec3f fatherPos, ofVec3f dir, float variation){
-		float r = 50;
-		float v1 = ofRandom(-variation, variation);
-		float v2 = ofRandom(-variation, variation);
-		float v3 = ofRandom(-variation, variation);
-//		float yaw = dir.angleRad(ofVec3f(0, 1, 0));
-//		float pitch = dir.angleRad(ofVec3f(1, 0, 0));
-		//float a1 = atan(dir.y / dir.x);
-		//float a2 = acos(dir.z / dir.length());
-//		pos.x = fatherPos.x + r * cos(yaw+v1) * cos(pitch+v2);
-//		pos.y = fatherPos.y + r * sin(yaw+v1) * cos(pitch+v2);
-//		pos.z = fatherPos.z + r * sin(pitch+v1);
-		dir.rotate(v1, ofVec3f(1,0,0));
-		dir.rotate(v2, ofVec3f(0,1,0));
-		dir.rotate(v3, ofVec3f(0,0,1));
-		pos = fatherPos + dir ;
-	}
 
 	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
 		ofVec3f vec = (pos - other->pos);

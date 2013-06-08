@@ -10,9 +10,7 @@
 
 // missing name "WTF_BUG" !!
 
-#define DRAW_3D		false
-#define DRAW_CONE	false
-#define DRAW_2D		true
+#define NUM_TREE_STYLES	5
 
 class testApp : public ofBaseApp{
 	
@@ -40,6 +38,8 @@ class testApp : public ofBaseApp{
 		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
 		void updateNodeForces(vector<Node*> &chosenNodes);
 		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh);
+
+	void drawLines();
 
 		void gatherLeaves(const vector<Node*> &nodes, vector<Node*> &leaves);
 		void position2DTree( Node * );
@@ -70,6 +70,9 @@ class testApp : public ofBaseApp{
 
 		ofEasyCam cam;
 
+
+	int treeStyle;
+
 		float SPRING_LENGTH;
 		float SPRINGINESS;
 		float REPULSION_FORCE;
@@ -81,7 +84,6 @@ class testApp : public ofBaseApp{
 		bool updateMesh;
 		bool repellNN;
 		float repelNNGain;
-		float repelRootGain;
 		float repelMyChildrenGain;
 		float repelChildChildGain;
 		float gravityGain;
@@ -92,14 +94,19 @@ class testApp : public ofBaseApp{
 
 	bool addSprings;
 	bool calcChildForces;
+	bool liveRePositioning;
+	bool adaptSpringsToSkeleton;
 
 		float lineWidth;
+	bool adapativeLineWidth;
 		float pointSize;
 		float lineAlpha;
 		float pointAlpha;
 		float nameAlpha;
 
 		float treeSpread;
+		float treeWidth;
+	float treeHeight;
 
 		int blurIterations;
 		float blurOffset;
