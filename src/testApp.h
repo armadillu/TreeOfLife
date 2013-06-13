@@ -5,7 +5,7 @@
 #include "Constants.h"
 #include "Spring.h"
 #include "ofxRemoteUIServer.h"
-#include "ofFboBlur.h"
+#include "ofxFboBlur.h"
 #include "Parser.h"
 
 // missing name "WTF_BUG" !!
@@ -113,7 +113,7 @@ class testApp : public ofBaseApp{
 		int blurOverlayGain;
 		int numBlurOverlays;
 
-		ofFboBlur gpuBlur;
+		ofxFboBlur gpuBlur;
 
 		int level;
 		int pLevel;

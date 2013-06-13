@@ -35,7 +35,7 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(CHILD_REPULSION_DIST, 1, 300);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1.0);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,255,128,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,128,128,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelNNGain, 0, 2);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelMyChildrenGain, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildGain, 0, 1);
@@ -50,9 +50,9 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(calcChildForces);
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,255,0,32) ); // set a bg color for the upcoming params
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 2);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeWidth, 0, 2);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeHeight, 0, 2);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 3);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeWidth, 0, 3);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeHeight, 0, 3);
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,128,0,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
@@ -374,14 +374,14 @@ void testApp::position3DTree( Node * node){
 			float a1 = ofRandom(M_PI*2);
 			float a2 = ofRandom(M_PI*2);
 			child->pos.x = r * cos(a1) * sin(a2) ;
-			child->pos.y = r * sin(a1) * sin(a2) ;
+			child->pos.y = unitH ;
 			child->pos.z = r * cos(a2) ;
 		}else{
-			ofVec3f dir = node->pos - node->parents[0]->pos;
+			ofVec3f dir = treeWidth * ( node->pos - node->parents[0]->pos );
 			float variation = treeSpread;
-			float v1 = ofRandom(-variation, variation);
-			float v2 = ofRandom(-variation, variation);
-			float v3 = ofRandom(-variation, variation);
+			float v1 = 180 * ofRandom(-variation, variation);
+			float v2 = 180 * ofRandom(-variation, variation);
+			float v3 = 180 * ofRandom(-variation, variation);
 			dir.rotate(v1, ofVec3f(1,0,0));
 			dir.rotate(v2, ofVec3f(0,1,0));
 			dir.rotate(v3, ofVec3f(0,0,1));

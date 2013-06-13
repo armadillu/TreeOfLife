@@ -132,11 +132,11 @@
 		BB04BD381755623800020CC1 /* tinyxmlparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlparser.cpp; sourceTree = "<group>"; };
 		BB04BD3A1755623800020CC1 /* ofxXmlSettings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxXmlSettings.cpp; sourceTree = "<group>"; };
 		BB04BD3B1755623800020CC1 /* ofxXmlSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxXmlSettings.h; sourceTree = "<group>"; };
-		BB04BD4D175565C000020CC1 /* ofFboBlur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofFboBlur.h; sourceTree = "<group>"; };
 		BB56944E17520E5F00869254 /* install.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = install.xml; sourceTree = "<group>"; };
 		BB56944F17520E5F00869254 /* ReadMe.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe.md; sourceTree = "<group>"; };
 		BB56945117520E5F00869254 /* ofxTimeMeasurements.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxTimeMeasurements.cpp; sourceTree = "<group>"; };
 		BB56945217520E5F00869254 /* ofxTimeMeasurements.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxTimeMeasurements.h; sourceTree = "<group>"; };
+		BB59B8DD1765494A00CA0739 /* ofxFboBlur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxFboBlur.h; sourceTree = "<group>"; };
 		BBAB23BE13894E4700AA2426 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = ../../../libs/glut/lib/osx/GLUT.framework; sourceTree = "<group>"; };
 		BBB2544D1756911D00390CB5 /* Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Parser.cpp; sourceTree = "<group>"; };
 		BBB2544E1756911D00390CB5 /* Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Parser.h; sourceTree = "<group>"; };
@@ -354,6 +354,7 @@
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				BB59B8DB1765494A00CA0739 /* ofxFboBlur */,
 				BB04BD091755623800020CC1 /* ofxOsc */,
 				BB04BD331755623800020CC1 /* ofxXmlSettings */,
 				BB04BC851755620100020CC1 /* ofxRemoteUI */,
@@ -378,6 +379,23 @@
 			children = (
 				BB56945117520E5F00869254 /* ofxTimeMeasurements.cpp */,
 				BB56945217520E5F00869254 /* ofxTimeMeasurements.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		BB59B8DB1765494A00CA0739 /* ofxFboBlur */ = {
+			isa = PBXGroup;
+			children = (
+				BB59B8DC1765494A00CA0739 /* src */,
+			);
+			name = ofxFboBlur;
+			path = ../../../../_Addons/ofxFboBlur;
+			sourceTree = "<group>";
+		};
+		BB59B8DC1765494A00CA0739 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				BB59B8DD1765494A00CA0739 /* ofxFboBlur.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -451,7 +469,6 @@
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* testApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* testApp.h */,
-				BB04BD4D175565C000020CC1 /* ofFboBlur.h */,
 				BBB2544D1756911D00390CB5 /* Parser.cpp */,
 				BBB2544E1756911D00390CB5 /* Parser.h */,
 			);
