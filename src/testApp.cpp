@@ -24,10 +24,13 @@ void testApp::setup(){
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,0,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(level, 3, NUM_LINE_MESHES);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeStyle, 0, NUM_TREE_STYLES-1);
+
+	vector<string> tsl; tsl.push_back("TREE_2D"); tsl.push_back("TREE_2_3_D");tsl.push_back("TREE_3D");
+	tsl.push_back("TREE_3D_CONE"); tsl.push_back("TREE_3D_CONE2");
+	OFX_REMOTEUI_SERVER_SHARE_ENUM_PARAM(treeStyle, 0, NUM_TREE_STYLES-1,tsl );
 
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,0,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRINGINESS, 0, 0.05);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(SPRING_LENGTH, 1, 500);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(REPULSION_FORCE, 0, 2);
@@ -35,13 +38,13 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(CHILD_REPULSION_DIST, 1, 300);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(FRICTION, 0.5, 1.0);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,128,128,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelNNGain, 0, 2);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelMyChildrenGain, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildGain, 0, 1);
 
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,255,0,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(liveRePositioning);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repellNN);
@@ -49,22 +52,22 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(adaptSpringsToSkeleton);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(calcChildForces);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,255,0,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 3);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeWidth, 0, 3);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeHeight, 0, 3);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,128,0,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpringForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpheres);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,255,255,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawNames);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 150);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameAlpha, 0, 1);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(255,0,255,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineWidth, 0.1, 10);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(lineAlpha, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(adapativeLineWidth);
@@ -72,7 +75,7 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointAlpha, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointSize, 1, 30);
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,255,32) ); // set a bg color for the upcoming params
+	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.blurPasses, 0, 4);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.blurOffset, 0.0, 10);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.blurOverlayGain, 0, 255);
@@ -619,7 +622,7 @@ void testApp::draw(){
 //									ofToString(chosenNodes[i]->totalLeaves),
 //									chosenNodes[i]->pos);
 				//if (chosenNodes[i]->softLeaf) ofDrawBitmapString( "X", chosenNodes[i]->pos);
-				if (chosenNodes[i]->children.size() > nameFilter){
+				if (chosenNodes[i]->children.size() > nameFilter || chosenNodes[i]->level < 3){
 					ofDrawBitmapString(chosenNodes[i]->name, chosenNodes[i]->pos);
 				}
 			}

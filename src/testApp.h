@@ -10,12 +10,11 @@
 
 // missing name "WTF_BUG" !!
 
-#define NUM_TREE_STYLES	5
-
 class testApp : public ofBaseApp{
 	
 	public:
-	
+
+	enum TreeStyle{TREE_2D, TREE_2_3_D, TREE_3D, TREE_3D_CONE, TREE_3D_CONE2, NUM_TREE_STYLES};
 		void setup();
 		void update();
 		void draw();
@@ -71,7 +70,7 @@ class testApp : public ofBaseApp{
 		ofEasyCam cam;
 
 
-	int treeStyle;
+	TreeStyle treeStyle;
 
 		float SPRING_LENGTH;
 		float SPRINGINESS;
