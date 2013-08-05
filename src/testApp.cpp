@@ -713,4 +713,5 @@ void testApp::mouseReleased(int x, int y, int button){
 
 void testApp::exit(){
 	OFX_REMOTEUI_SERVER_SAVE_TO_XML();
+	OFX_REMOTEUI_SERVER_CLOSE();
 }
