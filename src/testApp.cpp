@@ -3,7 +3,7 @@
 
 void testApp::setup(){
 
-	//ofSetVerticalSync(true);
+	ofSetVerticalSync(true);
 	ofEnableAlphaBlending();
 	glDisable(GL_POINT_SMOOTH);
 	ofSetSphereResolution(12);
