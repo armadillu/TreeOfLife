@@ -3,7 +3,7 @@
 
 void testApp::setup(){
 
-	ofSetVerticalSync(true);
+	//ofSetVerticalSync(true);
 	ofEnableAlphaBlending();
 	glDisable(GL_POINT_SMOOTH);
 	ofSetSphereResolution(12);
@@ -124,8 +124,8 @@ void testApp::setup(){
 	// blur ///////////////////////////
 
 	ofFbo::Settings s;
-	s.width = 2048;
-	s.height = 1024;
+	s.width = ofGetWidth();
+	s.height = ofGetHeight();
 	s.internalformat = GL_RGBA;
 	//	s.textureTarget = GL_TEXTURE_RECTANGLE_ARB;
 	s.maxFilter = GL_LINEAR; GL_NEAREST;
