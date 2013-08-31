@@ -62,6 +62,20 @@ struct Node{
 		//springForce.x = 0.0f, springForce.y = 0.0f, springForce.z = 0.0f;
 		springForces.clear();
 	}
+
+	Node* getParent(){
+		return parents[0];
+	}
+
+	Node* getRandomChild(){
+		Node* c = NULL;
+		if(children.size() > 0){
+			int index = floor(ofRandom(children.size()-1));
+			//printf("%d [%d] \n", index, children.size()-1 );
+			 c = children[index];
+		}
+		return c;
+	}
 	
 	ofVec3f pos;
 	ofVec3f vel;

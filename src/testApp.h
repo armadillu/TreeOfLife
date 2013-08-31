@@ -15,6 +15,7 @@ class testApp : public ofBaseApp{
 	public:
 
 	enum TreeStyle{TREE_2D, TREE_2_3_D, TREE_3D, TREE_3D_CONE, TREE_3D_CONE2, NUM_TREE_STYLES};
+
 		void setup();
 		void update();
 		void draw();
@@ -31,43 +32,34 @@ class testApp : public ofBaseApp{
 
 		void exit();
 
-		void recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel,
-										   vector<Node*> &chosenNodes, vector<Spring*> &springs);
-
-		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
-		void updateNodeForces(vector<Node*> &chosenNodes);
-		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh);
-
-	void drawLines();
-
 		void gatherLeaves(const vector<Node*> &nodes, vector<Node*> &leaves);
-		void position2DTree( Node * );
-		void position23DTree( Node * );
-		void position3DTree( Node * );
-		void position3DConeTree( Node * );
-		void position3DConeTree2( Node * );
 		int countChildren( Node * , int &numLeaves);
+
+		void gatherParentsToLevel(Node* node, vector<Node*> &parents, int levels);
+		void gatherChildrenToLevel(Node* node, vector<Node*> &children, int levels);
+
+		void drawDynamicTree();
 
 		Parser parser;
 
 		vector<Node*> speciesAll; //access by ID, contains duplicates
 		map<string, Node*> nodesByName;
 
-		vector<Node*> chosenNodes;
-		vector<Node*> softLeaves;
-		vector<Spring*> springs;
+		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
+		void updateNodeForces(vector<Node*> &chosenNodes);
+	
+		void forceBasedLayout(Node* startingNode, vector<Node*>nodes); //will alter position of those nodes, laying them out around the starting node
+
+		vector<Node*> tempTree;
 		vector<ofColor> colors;
 
 		Node* treeRoot;
 
-		ofMesh lines[NUM_LINE_MESHES];
-		ofMesh nodes;
-		ofMesh forces;
-
-		ofMesh line2d;
-		ofMesh point2d;
+		Node* treePointer;
 
 		ofEasyCam cam;
+		ofMesh linesMesh;
+		ofMesh pointsMesh;
 
 
 	TreeStyle treeStyle;
@@ -78,26 +70,25 @@ class testApp : public ofBaseApp{
 		float REPULSION_DIST;
 		float CHILD_REPULSION_DIST;
 		float FRICTION;
+
 		bool drawNames;
 		int nameFilter;
+
 		bool updateMesh;
 		bool repellNN;
 		float repelNNGain;
 		float repelMyChildrenGain;
 		float repelChildChildGain;
 		float gravityGain;
-		bool drawForces;
-		bool drawSpringForces;
-	bool drawSpheres;
-	bool blurLines;
+		bool blurLines;
 
-	bool addSprings;
-	bool calcChildForces;
-	bool liveRePositioning;
-	bool adaptSpringsToSkeleton;
+		bool addSprings;
+		bool calcChildForces;
+		bool liveRePositioning;
+		bool adaptSpringsToSkeleton;
 
 		float lineWidth;
-	bool adapativeLineWidth;
+		bool adapativeLineWidth;
 		float pointSize;
 		float lineAlpha;
 		float pointAlpha;
@@ -105,7 +96,7 @@ class testApp : public ofBaseApp{
 
 		float treeSpread;
 		float treeWidth;
-	float treeHeight;
+		float treeHeight;
 
 		int blurIterations;
 		float blurOffset;
