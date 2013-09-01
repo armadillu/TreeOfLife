@@ -47,8 +47,17 @@ class testApp : public ofBaseApp{
 
 		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
 		void updateNodeForces(vector<Node*> &chosenNodes);
-	
+
+		void recursiveTreeInfoBuild(Node * node, int cLevel);
+		void recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel, vector<Node*> &chosenNodes, vector<Spring*> &springs);
+		void recursiveFillVectorAndSpringsParents(Node * node, int &level, int maxLevel, vector<Node*> &chosenNodes, vector<Spring*> &springs);
+
 		void forceBasedLayout(Node* startingNode, vector<Node*>nodes); //will alter position of those nodes, laying them out around the starting node
+
+		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh, ofMesh & linesMesh);
+
+
+		vector<Spring*> springs;
 
 		vector<Node*> tempTree;
 		vector<ofColor> colors;
@@ -58,6 +67,11 @@ class testApp : public ofBaseApp{
 		Node* treePointer;
 
 		ofEasyCam cam;
+
+	ofMesh lines;
+	ofMesh nodes;
+	ofMesh forces;
+
 		ofMesh linesMesh;
 		ofMesh pointsMesh;
 

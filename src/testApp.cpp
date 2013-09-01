@@ -122,10 +122,37 @@ void testApp::setup(){
 
 
 	// setup tree pointer
+	treePointer = nodesByName["arthropoda"];
+	vector<Node*> myChildren;
+	vector<Node*> myParents;
+	tempTree.clear();
+	tempTree.push_back(treePointer);
 
-	treePointer = nodesByName["kinyongia fischeri fischeri"];
+	int level = 2;
+	gatherParentsToLevel(treePointer, myParents, level);
+	gatherChildrenToLevel(treePointer, myChildren, level);
+
+	for(int i = 0; i < myChildren.size(); i++){
+		tempTree.push_back(myChildren[i]);
+	}
+	for(int i = 0; i < myParents.size(); i++){
+		tempTree.push_back(myParents[i]);
+	}
+
+	//springs
+	int thisLevel = 0;
+	int maxLevel = level;
+	recursiveFillVectorAndSprings(treeRoot, thisLevel, maxLevel, tempTree, springs);
+	maxLevel = -level;
+	recursiveFillVectorAndSpringsParents(treeRoot, thisLevel, maxLevel, tempTree, springs);
+
+
+	//blah
 	linesMesh.setMode(OF_PRIMITIVE_LINES);
 	pointsMesh.setMode(OF_PRIMITIVE_POINTS);
+	nodes.setMode(OF_PRIMITIVE_POINTS);
+	lines.setMode(OF_PRIMITIVE_LINES);
+
 }
 
 
@@ -190,18 +217,72 @@ void testApp::gatherParentsToLevel(Node* node, vector<Node*> &parents, int level
 
 
 void testApp::gatherChildrenToLevel(Node* node, vector<Node*> &children, int levels){
-	for(int i = 0; i < levels; i++){
 
+	if (levels == 0) return;
+	if (node->children.size() == 0) return;
+	for(int i = 0; i < node->children.size(); i++){
+		children.push_back(node->children[i]);
+		gatherChildrenToLevel(node->children[i], children, levels-1);
 	}
 }
 
-void testApp::update(){
 
-	OFX_REMOTEUI_SERVER_UPDATE(DT);
+void testApp::recursiveTreeInfoBuild(Node * node, int cLevel){
 
-	TIME_SAMPLE_START("update");
+	int n = node->children.size();
+	node->level = cLevel;
+	cLevel++;
+	//node->setRandomPosAccordingToLevel(); //atempt to have a nice startup arrangement
+	if (n == 0){
+		return;
+	}
+	node->softLeaf = false;
 
-	TIME_SAMPLE_STOP("update");
+	for(int i = 0; i < n; i++) {
+		Node* child = node->children[i];
+		recursiveTreeInfoBuild(child, cLevel);
+	}
+	cLevel--;
+}
+
+
+void testApp::setupSprings(vector<Node*> &nodes,  vector<Spring*> &springs_){
+
+
+	for(int i = 0; i < nodes.size; i++) {
+		Node* child = node->children[i];
+
+		if(addSprings){
+			Spring * s = new Spring(node, child, &SPRING_LENGTH, &SPRINGINESS);
+			springs_.push_back(s);
+		}
+
+		recursiveFillVectorAndSprings(child, cLevel, maxLevel, chosenNodes, springs);
+	}
+	cLevel--;
+}
+
+
+
+void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh, ofMesh & linesMesh_){
+
+	int n = chosenNodes.size();
+
+	for(int i = 0; i < n; i++) {
+		Node* me = chosenNodes[i];
+		if (!me->softLeaf){
+			for(int j = 0; j < me->children.size(); j++) {
+				linesMesh_.addColor( ofColor::red );
+				linesMesh_.addVertex( me->pos );
+				linesMesh_.addColor(ofColor::red);
+				linesMesh_.addVertex( me->children[j]->pos );
+			}
+		}
+		ofColor c = me->color;
+		c.a *= pointAlpha;
+		ptsMesh.addColor(c);
+		ptsMesh.addVertex(me->pos);
+	}
 }
 
 
@@ -294,6 +375,30 @@ void testApp::forceBasedLayout(Node* startingNode, vector<Node*>nodes){
 	}
 }
 
+void testApp::update(){
+
+	OFX_REMOTEUI_SERVER_UPDATE(DT);
+
+	TIME_SAMPLE_START("update");
+
+	nodes.clear();
+	lines.clear();
+
+	TIME_SAMPLE_START("calcForces");
+	calcForces(tempTree, springs);
+	TIME_SAMPLE_STOP("calcForces");
+	updateNodeForces(tempTree);
+
+
+	TIME_SAMPLE_START("fillMesh");
+	fillMesh(tempTree, nodes, lines);
+	TIME_SAMPLE_STOP("fillMesh");
+
+	TIME_SAMPLE_STOP("update");
+}
+
+
+
 void testApp::draw(){
 
 	glPointSize(pointSize);
@@ -309,7 +414,9 @@ void testApp::draw(){
 		ofClear(0, 0, 0, 0);
 		cam.begin();
 
-			drawDynamicTree();
+			nodes.draw();
+			lines.draw();
+			//drawDynamicTree();
 
 		cam.end();
 	gpuBlur.endDrawScene();

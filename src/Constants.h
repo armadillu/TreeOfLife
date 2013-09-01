@@ -27,6 +27,8 @@ struct Node{
 		softLeaf = true;
 		fixed = false;
 		deepestLevel = totalChildren = 0;
+		float s = 20;
+		pos = ofVec3f(ofRandom(-s, s), ofRandom(-s, s), ofRandom(-s, s));
 	};
 
 
@@ -64,7 +66,9 @@ struct Node{
 	}
 
 	Node* getParent(){
-		return parents[0];
+		if(parents.size() > 0)
+			return parents[0];
+		else return NULL;
 	}
 
 	Node* getRandomChild(){
