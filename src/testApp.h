@@ -7,6 +7,7 @@
 #include "ofxRemoteUIServer.h"
 #include "ofxFboBlur.h"
 #include "Parser.h"
+#include "ofxAnimatableOfPoint.h"
 
 // missing name "WTF_BUG" !!
 
@@ -32,51 +33,57 @@ class testApp : public ofBaseApp{
 
 		void exit();
 
-		void gatherLeaves(const vector<Node*> &nodes, vector<Node*> &leaves);
-		int countChildren( Node * , int &numLeaves);
-
 		void gatherParentsToLevel(Node* node, vector<Node*> &parents, int levels);
 		void gatherChildrenToLevel(Node* node, vector<Node*> &children, int levels);
 
-		void drawDynamicTree();
 
 		Parser parser;
 
 		vector<Node*> speciesAll; //access by ID, contains duplicates
 		map<string, Node*> nodesByName;
 
-		void calcForces(vector<Node*> &chosenNodes, vector<Spring*> &springs);
-		void updateNodeForces(vector<Node*> &chosenNodes);
+		void recursiveTreeInfoBuild(Node * treeRoot, int cLevel); //sets up the level info for each node of the tree
+																	//also fills in NODE* siblingR/L 
+		void gatherLeaves(Node* root, vector<Node*> &leaves); //fill in leaves structure, also fill in each node's children depth (deepestLevel)
+		void updateNodeDepths(const vector <Node *> &leaves);
+		int countChildren( Node * root, int &numLeaves);
+		int countTempChildren( Node * node , int & numLeaves, int level);
 
-		void recursiveTreeInfoBuild(Node * node, int cLevel);
-		void recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel, vector<Node*> &chosenNodes, vector<Spring*> &springs);
-		void recursiveFillVectorAndSpringsParents(Node * node, int &level, int maxLevel, vector<Node*> &chosenNodes, vector<Spring*> &springs);
+		//will alter position of those nodes, laying them out around the starting node. Fills in the list of drawn nodes too
+		void layout(Node* startingNode, int level,  vector<Node*> & nodeList);
+		void fillMeshes(Node* startingNode, int level, ofMesh & ptsMesh, ofMesh & linesMesh, vector<Node*> & drawnNodes);
 
-		void forceBasedLayout(Node* startingNode, vector<Node*>nodes); //will alter position of those nodes, laying them out around the starting node
+		void position2DTree(Node*, int level, bool tempVersion);
+		void updateCam(bool interpolate);
 
-		void fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh, ofMesh & linesMesh);
+		ofVec3f camTarget, camPos;
+		float camDelay;
+	float camTravelDuration;
+		ofVec3f camJumpOffsetFix;
+	bool camJumped;
 
 
-		vector<Spring*> springs;
-
-		vector<Node*> tempTree;
 		vector<ofColor> colors;
 
 		Node* treeRoot;
-
-		Node* treePointer;
+		Node* treePointer; //current node
+		Node* prevTreePointer; //current node
+		Node* topTreePointer;
+		vector<Node*> tempTree;
 
 		ofEasyCam cam;
+		float fov;
+		float camDist;
 
-	ofMesh lines;
-	ofMesh nodes;
-	ofMesh forces;
+		ofMesh lines;
+		ofMesh nodes;
+		ofxAnimatableOfPoint nodeFollowOffsetAnimation;
 
-		ofMesh linesMesh;
-		ofMesh pointsMesh;
+		ofColor lineColor;
+		ofColor nodeColor;
+		ofColor bgColor;
 
-
-	TreeStyle treeStyle;
+		TreeStyle treeStyle;
 
 		float SPRING_LENGTH;
 		float SPRINGINESS;
@@ -106,9 +113,10 @@ class testApp : public ofBaseApp{
 		float pointSize;
 		float lineAlpha;
 		float pointAlpha;
-		float nameAlpha;
+		ofColor nameColor;
 
 		float treeSpread;
+		float treeAngleOffset;
 		float treeWidth;
 		float treeHeight;
 
@@ -119,6 +127,6 @@ class testApp : public ofBaseApp{
 
 		ofxFboBlur gpuBlur;
 
-		int level;
-		int pLevel;
+		int numLevels;
+//		int pLevel;
 };

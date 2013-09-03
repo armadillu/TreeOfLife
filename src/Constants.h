@@ -12,62 +12,84 @@
 #define NUM_LINE_MESHES				16
 
 #define	FATHER_CHILDREN_SEPARATOR	'$'
-#define DT							0.1666f
+#define DT							0.01666f
 
 #define	ALPHA						255
 
 #define TREE_DEPTH					4
 
-struct Node{
+
+class SuperNode {
+public:
+	ofVec3f			pos;
+	ofVec3f			absPos;
+	//ofVec3f			vel;
+	//ofVec3f			force;
+	ofColor			color;
+	//ofColor			colorSoft;
+
+	int				ID;			//not used for csv
+	int				parentID;	//idem
+	//bool			fixed;	//wont move
+	string			parentName;
+	vector<SuperNode*>	parents;
+	vector<string>	parentNames;
+};
+
+class Node : public SuperNode{
+public:
+	
 	Node(int ID_, int parentID_, string name_, string parentName_ = ""){
 		name = name_;
+		siblingR = NULL;
+		siblingL = NULL;
 		ID = ID_;
 		parentID = parentID_;
 		parentName = parentName_;
-		softLeaf = true;
-		fixed = false;
+		softLeaf = false;
+		//fixed = false;
 		deepestLevel = totalChildren = 0;
 		float s = 20;
 		pos = ofVec3f(ofRandom(-s, s), ofRandom(-s, s), ofRandom(-s, s));
 	};
 
 
-	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
-		ofVec3f vec = (pos - other->pos);
-		float dist = vec.length();
-		if (dist < repDist){
-			float percent = 1.0f - (dist / repDist);
-			vec /= dist; // normalize
-			addForce( ofVec3f( vec * repForce * scale * percent) );
-		}
-	}
+//	void addRepulsion(Node* other, float repForce, float repDist, float scale = 1.0f){
+//		ofVec3f vec = (pos - other->pos);
+//		float dist = vec.length();
+//		if (dist < repDist){
+//			float percent = 1.0f - (dist / repDist);
+//			vec /= dist; // normalize
+//			addForce( ofVec3f( vec * repForce * scale * percent) );
+//		}
+//	}
 
-	void addForce(const ofVec3f &f ){
-		force += f;
-	};
+//	void addForce(const ofVec3f &f ){
+//		force += f;
+//	};
+//
+//	void addSpringForce(const ofVec3f &f ){
+//		addForce(f);
+//		springForces.push_back(f);
+//	};
 
-	void addSpringForce(const ofVec3f &f ){
-		addForce(f);
-		springForces.push_back(f);
-	};
-
-	void applyForces(float dt, float fr){
-		vel = vel + force ;
-		vel *= fr;
-		if(fixed) return;
-		pos = pos + vel ;
-	}
-
-	void resetForce(){
-		force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
-		vel.x = vel.y = vel.z = 0.0f;
-		//springForce.x = 0.0f, springForce.y = 0.0f, springForce.z = 0.0f;
-		springForces.clear();
-	}
+//	void applyForces(float dt, float fr){
+//		vel = vel + force ;
+//		vel *= fr;
+//		if(fixed) return;
+//		pos = pos + vel ;
+//	}
+//
+//	void resetForce(){
+//		force.x = 0.0f, force.y = 0.0f, force.z = 0.0f;
+//		vel.x = vel.y = vel.z = 0.0f;
+//		//springForce.x = 0.0f, springForce.y = 0.0f, springForce.z = 0.0f;
+//		springForces.clear();
+//	}
 
 	Node* getParent(){
 		if(parents.size() > 0)
-			return parents[0];
+			return (Node*)parents[0];
 		else return NULL;
 	}
 
@@ -81,26 +103,24 @@ struct Node{
 		return c;
 	}
 	
-	ofVec3f pos;
-	ofVec3f vel;
-	ofVec3f force;
-	vector<ofVec3f> springForces;
-	ofColor color;
-	ofColor colorSoft;
-	vector<Node*> children;
-	vector<Node*> parents;
-	vector<string> parentNames;
-	int ID;
-	int parentID;
-	string parentName;
-	string name;
-	bool softLeaf; //if true, used as a mark that we should look for children beyond this node when drawing
-	bool fixed;	//wont move
-	int level;	//your level in tree
-	int deepestLevel; //what level your children get to
-	float angle;
-	int totalChildren; // how many child + subChild
-	int totalLeaves;
+	vector<Node*>	children;
+	//vector<ofVec3f> springForces;
+	string			name;
+
+	bool			softLeaf; //if true, used as a mark that we should look for children beyond this node when drawing
+	int				level;	//your level in tree
+	int				deepestLevel; //what level your children get to
+	//float			angle;
+	int				totalChildren; // how many child + subChild
+	int				totalLeaves;
+
+	//used for tree navigation
+	int				tempLevel;
+	int				tempTotalChildren;
+	int				tempTotalLeaves;
+	Node *			siblingR;
+	Node *			siblingL;
+
 };
 
 

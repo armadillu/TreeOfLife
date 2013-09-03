@@ -148,9 +148,7 @@ void* Parser::buildTree(map<string, Node*> &dictionary){
 		c++;
 	}
 
-
 	//at this point, the nodesByName struct has all valid nodes, with each node containing a list of parents and chidren as Node*
-
 	vector<Node*> roots;
 	vector<Node*> leaves;
 
@@ -175,7 +173,7 @@ void* Parser::buildTree(map<string, Node*> &dictionary){
 	cout << "num roots: " << roots.size() << endl;
 	cout << "num leaves: " << leaves.size() << endl;
 	cout << "done!" << endl;
-	
+
 	return roots[0];
 }
 
