@@ -33,15 +33,13 @@ void testApp::setup(){
 
 	gpuBlur.setup(s);
 
-	nodeFollowOffsetAnimation.setDuration(0.7);
-	nodeFollowOffsetAnimation.setCurve(TANH);
-	
 	// params
 
 	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,0,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("TREE");
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(timings);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(numLevels, 1,4);
 
 	vector<string> tsl; tsl.push_back("TREE_2D"); tsl.push_back("TREE_2_3_D");tsl.push_back("TREE_3D");
@@ -77,8 +75,8 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0.1, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeAngleOffset, 0.1, 1);
 
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeWidth, 0, 3);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeHeight, 0, 3);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeWidth, 0, 10);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeHeight, 0, 10);
 
 	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("DEBUG");
@@ -103,10 +101,15 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointSize, 1, 30);
 	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(fov, 20, 80);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(camDist, 300, 2000);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(camDelay, 0.0, 1.0);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(camDist, 300, 15000);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(camDelay, 0.8, 1.0);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(camTravelDuration, 0.5, 15.0);
-
+	vector<string> curves;
+	for (int i = 0; i < NUM_ANIM_CURVES ; i++) {
+		curves.push_back( ofxAnimatable::getCurveName( (AnimCurve)i) );
+	}
+	OFX_REMOTEUI_SERVER_SHARE_ENUM_PARAM(curve, 0, NUM_ANIM_CURVES, curves );
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(freeCamera);
 
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("BLUR OVERLAY");
@@ -148,6 +151,7 @@ void testApp::setup(){
 
 	for(int i = 0; i < speciesAll.size(); i++){ //store all full tree positions
 		speciesAll[i]->absPos = speciesAll[i]->pos;
+		speciesAll[i]->pos = ofVec3f();
 	}
 	
 	// setup tree pointer
@@ -173,6 +177,10 @@ void testApp::setup(){
 	//blah
 	nodes.setMode(OF_PRIMITIVE_POINTS);
 	lines.setMode(OF_PRIMITIVE_LINES);
+	appearingNodes.setMode(OF_PRIMITIVE_POINTS);
+	appearingLines.setMode(OF_PRIMITIVE_LINES);
+	disappearingNodes.setMode(OF_PRIMITIVE_POINTS);
+	disappearingLines.setMode(OF_PRIMITIVE_LINES);
 }
 
 
@@ -296,12 +304,31 @@ void testApp::position2DTree( Node * node, int levels, bool tempVersion){
 		Node* child = node->children[i];
 		int childTotalLeaves = child->totalLeaves;
 		if(tempVersion) childTotalLeaves = child->tempTotalLeaves;
+
 		// flat 2d tree
-		child->pos = node->pos + ofVec3f(
-										 off + childTotalLeaves * unit * 0.5f ,
-										 - treeHeight * 100.0f * (1 + node->level * 0.2),
-										 0.0f //r * sin( parentAngle + M_PI * 2 * percent)
-										 );
+		ofVec3f newP =	node->pos + ofVec3f(
+											off + childTotalLeaves * unit * 0.5f ,
+											- treeHeight * 130.0f  -  400 * ofClamp(7 - node->level, 0, 1000 ),
+											0.0f
+											);
+
+
+
+		if ( !child->targetPos.match(newP, 0.1) ){ //this node is changing position!
+			if(std::find(prevTree.begin(), prevTree.end(), child) != prevTree.end()){ //node was in tree before, but its moving
+				child->color = ofColor::red;
+				child->initialPos = child->pos;
+			}else{ //node is new in tree
+				child->color = ofColor::yellow;
+				child->initialPos = node->initialPos;
+			}
+		}else{ //node stays where it was
+			child->color = ofColor::blue;
+			child->initialPos = newP; //child->pos;
+		}
+		child->targetPos = newP;
+
+		if(tempVersion) child->pos = newP;
 
 		if (child->children.size() == 0){
 			off += unit ;
@@ -316,25 +343,34 @@ void testApp::updateCam(bool camJumped){
 
 	cam.setFarClip(1000000);
 	cam.setFov(fov);
+	//camTarget = treePointer->pos;
 	camTarget = nodeFollowOffsetAnimation.getCurrentPosition();
-	//camTarget = nodeFollowOffsetAnimation.getTargetPosition();
-	//cout << camTarget << endl;
 	float r = camDelay;
 	if(camJumped){
 		camPos = camTarget;
 	}else{
-		camPos = r * camPos + (1-r) * camTarget;
+		camPos = r * camPos + (1.0f - r) * camTarget;
 	}
-	cam.setGlobalPosition(camPos + ofVec3f(0,0,camDist));
-	cam.setTarget(camTarget);
+	if(!freeCamera){
+		cam.setGlobalPosition(camPos + ofVec3f(0,0,camDist));
+		cam.setTarget(camTarget);
+	}
 }
 
 
 void testApp::update(){
 
 	OFX_REMOTEUI_SERVER_UPDATE(DT);
-	nodeFollowOffsetAnimation.update(DT);
 
+	anim.setCurve(curve);
+	nodeFollowOffsetAnimation.setCurve(curve);
+	treePointerAnim.setCurve(curve);
+
+	anim.update(DT);
+	nodeFollowOffsetAnimation.update(DT);
+	treePointerAnim.update(DT);
+
+	TIME_SAMPLE_SET_ENABLED(timings);
 	TIME_SAMPLE_START("update");
 
 		int level = numLevels ;
@@ -343,8 +379,9 @@ void testApp::update(){
 
 		if(prevTreePointer != treePointer){ //we just started an anim! rebuild tree!
 
-
 			//find the  starting node //////////////////////////
+			if (prevTreePointer) treePointerAnim.setPosition(prevTreePointer->pos);
+
 			topTreePointer = treePointer;
 			ofVec3f posOffset;
 			float dist = 0;
@@ -362,12 +399,18 @@ void testApp::update(){
 				l--;
 			}
 
-			topTreePointer->pos = ofVec3f();
+			//reposition all nodes
+			//topTreePointer->pos = ofVec3f();
 			int doubledLevel = level * 2 + 1;
 			tempTree.clear();
 			int numL = 0;
 			countTempChildren(topTreePointer, numL, doubledLevel);
 			position2DTree(topTreePointer, doubledLevel, true/*temp version*/);
+			if(prevTreePointer){
+				dist = (prevTreePointer->pos).distance(treePointer->targetPos);
+			}
+
+			anim.animateFromTo(0, 1);
 			//camJumpOffsetFix = -treePointer->pos;
 			//cout << "camJumpOffsetFix: "<< camJumpOffsetFix << endl;
 
@@ -375,12 +418,64 @@ void testApp::update(){
 			lines.clear();
 			fillMeshes(topTreePointer, doubledLevel, nodes, lines, tempTree);
 
-			nodeFollowOffsetAnimation.setDuration( camTravelDuration * ofMap(dist, 10, 5000, 0.1, 1, true ) );
-			nodeFollowOffsetAnimation.setPosition( treePointer->pos + posOffset);
-			nodeFollowOffsetAnimation.animateTo(treePointer->pos );
+			float camTravelDur = camTravelDuration * ofMap(dist, 10, 5000, 0.2, 1.3, true );
+			nodeFollowOffsetAnimation.setDuration( camTravelDur );
+			treePointerAnim.setDuration(camTravelDur);
+			anim.setDuration(camTravelDur);
+
+			nodeFollowOffsetAnimation.setPosition( prevTreePointer ? prevTreePointer->initialPos : ofVec3f() );
+			nodeFollowOffsetAnimation.animateTo(treePointer->targetPos );
 			camJumped = true;
 
+			disappearingTree.clear();
+			for(int i = 0; i < prevTree.size(); i++){
+				if ( std::find(tempTree.begin(), tempTree.end(), prevTree[i]) == tempTree.end() ){ //found!
+					disappearingTree.push_back(prevTree[i]);
+				}
+			}
+
+			appearingTree.clear();
+			for(int i = 0; i < tempTree.size(); i++){
+				if ( std::find(prevTree.begin(), prevTree.end(), tempTree[i]) == prevTree.end() ){ //found!
+					appearingTree.push_back(tempTree[i]);
+				}
+			}
+
+			remainingTree.clear();
+			for(int i = 0; i < tempTree.size(); i++){
+				if ( std::find(disappearingTree.begin(), disappearingTree.end(), tempTree[i]) == disappearingTree.end() &&
+					std::find(appearingTree.begin(), appearingTree.end(), tempTree[i]) == appearingTree.end() ){ //found!
+					remainingTree.push_back(tempTree[i]);
+				}
+			}
+
+			cout << "disappearingTree: " << disappearingTree.size() << endl;
+			cout << "appearingTree: " << appearingTree.size() << endl;
+			cout << "remainingTree: " << remainingTree.size() << endl;
+			cout << "tempTree: " << tempTree.size() << endl;
+			cout << "prevTree: " << prevTree.size() << endl;
+			cout << "########################################################"<< endl;
+
 			prevTreePointer = treePointer; //done!
+			prevTree = tempTree; //copy last tree
+			treePointerAnim.animateTo(treePointer->targetPos);
+
+		}
+
+
+		if (anim.isAnimating()) {
+			float animation = anim.getCurrentValue();
+			for(int i = 0; i < tempTree.size(); i++){
+				tempTree[i]->pos = tempTree[i]->initialPos * (1.0f - animation) + tempTree[i]->targetPos * animation;
+			}
+			fillMesh(nodes, lines, remainingTree); //draw nodes that dont fade normally
+
+			for(int i = 0; i < disappearingTree.size(); i++){
+				disappearingTree[i]->pos = disappearingTree[i]->initialPos * (1.0f - animation) + disappearingTree[i]->targetPos * animation;
+			}
+			//draw fades that either fade in or fade out ith custom alpha
+			fillMesh(disappearingNodes, disappearingLines, disappearingTree, 1.0f - anim.getPercentDone());
+			fillMesh(appearingNodes, appearingLines , appearingTree, anim.getPercentDone());
 		}
 
 		TIME_SAMPLE_STOP("layout");
@@ -396,7 +491,7 @@ void testApp::draw(){
 	glPointSize(pointSize);
 	ofSetLineWidth(lineWidth);
 
-	//cm
+	//cam
 	updateCam(camJumped);
 	if(camJumped){
 		camJumped = false;
@@ -412,13 +507,14 @@ void testApp::draw(){
 		cam.begin();
 			nodes.draw();
 			lines.draw();
+			appearingLines.draw();
+			appearingNodes.draw();
+			disappearingLines.draw();
+			disappearingNodes.draw();
 
 			//current node in cyan
-			ofMesh m;
-			m.setMode(OF_PRIMITIVE_POINTS);
-			m.addVertex(treePointer->pos);
-			ofSetColor(ofColor::orange);
-			m.draw();
+			ofSetColor(255,160);
+			ofCircle(treePointerAnim.getCurrentPosition().x, treePointerAnim.getCurrentPosition().y, 50);
 			ofDrawAxis(20);
 		cam.end();
 	gpuBlur.endDrawScene();
@@ -459,7 +555,7 @@ void testApp::draw(){
 	TIME_SAMPLE_STOP("draw");
 
 	ofSetColor(128);
-	//TIME_SAMPLE_DRAW_BOTTOM_RIGHT();
+	TIME_SAMPLE_DRAW_BOTTOM_RIGHT();
 	if(treePointer){
 		ofDrawBitmapStringHighlight(
 									"tree Ptr: " + treePointer->name + "\n"
@@ -469,6 +565,32 @@ void testApp::draw(){
 									);
 	}
 }
+
+
+void testApp::fillMesh(ofMesh & ptsMesh, ofMesh & linesMesh, vector<Node*> & drawnNodes, float a){
+
+	ptsMesh.clear();
+	linesMesh.clear();
+	for(int i = 0 ; i < drawnNodes.size(); i++){
+		Node * node = drawnNodes[i];
+		Node * parent = node->getParent();
+		if (parent == NULL) continue;
+		//if (node->softLeaf) continue;
+		ofColor c = node->color;
+		c.a *= a;
+		ptsMesh.addColor(c);
+		ptsMesh.addVertex( node->pos );
+
+		//mesh
+		c = lineColor;
+		c.a *= a;
+		linesMesh.addColor( c );
+		linesMesh.addVertex( node->pos );
+		linesMesh.addColor(c);
+		linesMesh.addVertex( parent->pos );
+	}
+}
+
 
 void testApp::fillMeshes(Node* node, int level, ofMesh & ptsMesh, ofMesh & linesMesh, vector<Node*> & drawnNodes){
 
@@ -484,9 +606,9 @@ void testApp::fillMeshes(Node* node, int level, ofMesh & ptsMesh, ofMesh & lines
 	ptsMesh.addColor(c);
 	ptsMesh.addVertex(node->pos );
 
-	drawnNodes.push_back(node);
 
 	if(level > 1){ //dont draw lines to children on last level
+		drawnNodes.push_back(node);
 		for(int i = 0; i < nc; i++){
 			Node *n = node->children[i];
 			//mesh
@@ -530,6 +652,14 @@ void testApp::keyPressed(int key){
 				prevTreePointer = treePointer;
 				treePointer = treePointer->siblingL;
 				moved = true;
+			}else{
+				if(treePointer->siblingR > 0 ){
+					prevTreePointer = treePointer;
+					while (treePointer->siblingR){
+						treePointer = treePointer->siblingR;
+					}
+					moved = true;
+				}
 			}
 			break;
 
@@ -538,6 +668,14 @@ void testApp::keyPressed(int key){
 				prevTreePointer = treePointer;
 				treePointer = treePointer->siblingR;
 				moved = true;
+			}else{
+				if(treePointer->siblingL > 0 ){
+					prevTreePointer = treePointer;
+					while (treePointer->siblingL){
+						treePointer = treePointer->siblingL;
+					}
+					moved = true;
+				}
 			}
 			break;
 

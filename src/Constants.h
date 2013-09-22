@@ -17,12 +17,17 @@
 #define	ALPHA						255
 
 #define TREE_DEPTH					4
-
+#include "ofxAnimatableOfPoint.h"
 
 class SuperNode {
 public:
+
+
 	ofVec3f			pos;
+	ofVec3f			targetPos;
+	ofVec3f			initialPos;
 	ofVec3f			absPos;
+
 	//ofVec3f			vel;
 	//ofVec3f			force;
 	ofColor			color;

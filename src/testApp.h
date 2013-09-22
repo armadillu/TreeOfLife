@@ -8,6 +8,7 @@
 #include "ofxFboBlur.h"
 #include "Parser.h"
 #include "ofxAnimatableOfPoint.h"
+#include "ofxAnimatableFloat.h"
 
 // missing name "WTF_BUG" !!
 
@@ -52,15 +53,16 @@ class testApp : public ofBaseApp{
 		//will alter position of those nodes, laying them out around the starting node. Fills in the list of drawn nodes too
 		void layout(Node* startingNode, int level,  vector<Node*> & nodeList);
 		void fillMeshes(Node* startingNode, int level, ofMesh & ptsMesh, ofMesh & linesMesh, vector<Node*> & drawnNodes);
+		void fillMesh(ofMesh & ptsMesh, ofMesh & linesMesh, vector<Node*> & drawnNodes, float a = 1);
 
 		void position2DTree(Node*, int level, bool tempVersion);
 		void updateCam(bool interpolate);
 
 		ofVec3f camTarget, camPos;
 		float camDelay;
-	float camTravelDuration;
+		float camTravelDuration;
 		ofVec3f camJumpOffsetFix;
-	bool camJumped;
+		bool camJumped;
 
 
 		vector<ofColor> colors;
@@ -70,19 +72,35 @@ class testApp : public ofBaseApp{
 		Node* prevTreePointer; //current node
 		Node* topTreePointer;
 		vector<Node*> tempTree;
+		vector<Node*> prevTree;
+		vector<Node*> disappearingTree; //nodes that are disappearing durign this animation cycle
+		vector<Node*> appearingTree;	//nodes that are appearing durign this animation cycle
+		vector<Node*> remainingTree;	//nodes that remain on view durign this animation cycle
+
 
 		ofEasyCam cam;
 		float fov;
 		float camDist;
 
+	bool freeCamera;
+	bool timings;
+
 		ofMesh lines;
 		ofMesh nodes;
+		ofMesh appearingLines;
+		ofMesh appearingNodes;
+		ofMesh disappearingLines;
+		ofMesh disappearingNodes;
+
 		ofxAnimatableOfPoint nodeFollowOffsetAnimation;
+		ofxAnimatableOfPoint treePointerAnim;
+		ofxAnimatableFloat anim;
 
 		ofColor lineColor;
 		ofColor nodeColor;
 		ofColor bgColor;
 
+		AnimCurve curve;
 		TreeStyle treeStyle;
 
 		float SPRING_LENGTH;
