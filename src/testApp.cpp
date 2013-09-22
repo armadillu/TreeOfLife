@@ -314,16 +314,17 @@ void testApp::position2DTree( Node * node, int levels, bool tempVersion){
 
 
 
+		child->color = nodeColor;
 		if ( !child->targetPos.match(newP, 0.1) ){ //this node is changing position!
 			if(std::find(prevTree.begin(), prevTree.end(), child) != prevTree.end()){ //node was in tree before, but its moving
-				child->color = ofColor::red;
+				//child->color = ofColor::red;
 				child->initialPos = child->pos;
 			}else{ //node is new in tree
-				child->color = ofColor::yellow;
+				//child->color = ofColor::yellow;
 				child->initialPos = node->initialPos;
 			}
 		}else{ //node stays where it was
-			child->color = ofColor::blue;
+			//child->color = ofColor::blue;
 			child->initialPos = newP; //child->pos;
 		}
 		child->targetPos = newP;
@@ -401,7 +402,7 @@ void testApp::update(){
 
 			//reposition all nodes
 			//topTreePointer->pos = ofVec3f();
-			int doubledLevel = level * 2 + 1;
+			int doubledLevel = level * 2 + 2;
 			tempTree.clear();
 			int numL = 0;
 			countTempChildren(topTreePointer, numL, doubledLevel);
@@ -449,6 +450,10 @@ void testApp::update(){
 				}
 			}
 
+			for(int i = 0; i < disappearingTree.size(); i++){
+				//disappearingTree[i]->initialPos = disappearingTree[i]->pos;
+				if(disappearingTree[i]->getParent()) disappearingTree[i]->targetPos = disappearingTree[i]->getParent()->targetPos;
+			}
 			cout << "disappearingTree: " << disappearingTree.size() << endl;
 			cout << "appearingTree: " << appearingTree.size() << endl;
 			cout << "remainingTree: " << remainingTree.size() << endl;
@@ -533,14 +538,15 @@ void testApp::draw(){
 	//overlay the blur
 	gpuBlur.drawBlurFbo(); 
 
-	ofEnableBlendMode(OF_BLENDMODE_ADD);
+	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 	cam.begin();
 		
 		if(drawNames){
 			ofSetColor(nameColor);
 			for(int i = 0; i < tempTree.size(); i++){
 				if (tempTree[i]->children.size() > nameFilter || tempTree[i]->level < 3){
-					ofDrawBitmapString(tempTree[i]->name + " L:" + ofToString(tempTree[i]->level), tempTree[i]->pos );
+
+					ofDrawBitmapString(tempTree[i]->name + " L:" + ofToString(tempTree[i]->level), tempTree[i]->pos + ofVec3f(80,-5,0) );
 					//ofDrawBitmapString(tempTree[i]->name + " L:" + ofToString(tempTree[i]->level) + " NLeaves:" + ofToString(tempTree[i]->tempTotalLeaves), tempTree[i]->pos);
 				}
 			}

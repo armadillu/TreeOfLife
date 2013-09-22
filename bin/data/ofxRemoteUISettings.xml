@@ -5,45 +5,45 @@
         <B>0</B>
         <A>255</A>
     </REMOTEUI_PARAM_COLOR>
-    <REMOTEUI_PARAM_FLOAT paramName="camDelay">0.850448906</REMOTEUI_PARAM_FLOAT>
-    <REMOTEUI_PARAM_FLOAT paramName="camDist">6134.189453125</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="camDelay">0.901048839</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="camDist">14032.076171875</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_FLOAT paramName="camTravelDuration">1.150584817</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_ENUM paramName="curve">9</REMOTEUI_PARAM_ENUM>
     <REMOTEUI_PARAM_BOOL paramName="drawNames">1</REMOTEUI_PARAM_BOOL>
     <REMOTEUI_PARAM_FLOAT paramName="fov">80.000000000</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_BOOL paramName="freeCamera">0</REMOTEUI_PARAM_BOOL>
-    <REMOTEUI_PARAM_FLOAT paramName="gpuBlur.blurOffset">2.454678774</REMOTEUI_PARAM_FLOAT>
-    <REMOTEUI_PARAM_INT paramName="gpuBlur.blurOverlayGain">255</REMOTEUI_PARAM_INT>
-    <REMOTEUI_PARAM_INT paramName="gpuBlur.blurPasses">2</REMOTEUI_PARAM_INT>
-    <REMOTEUI_PARAM_INT paramName="gpuBlur.numBlurOverlays">1</REMOTEUI_PARAM_INT>
-    <REMOTEUI_PARAM_FLOAT paramName="lineAlpha">0.754337907</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="gpuBlur.blurOffset">1.515020728</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_INT paramName="gpuBlur.blurOverlayGain">204</REMOTEUI_PARAM_INT>
+    <REMOTEUI_PARAM_INT paramName="gpuBlur.blurPasses">3</REMOTEUI_PARAM_INT>
+    <REMOTEUI_PARAM_INT paramName="gpuBlur.numBlurOverlays">2</REMOTEUI_PARAM_INT>
+    <REMOTEUI_PARAM_FLOAT paramName="lineAlpha">0.216332868</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_COLOR paramName="lineColor">
         <R>55</R>
         <G>255</G>
-        <B>13</B>
-        <A>122</A>
+        <B>14</B>
+        <A>107</A>
     </REMOTEUI_PARAM_COLOR>
-    <REMOTEUI_PARAM_FLOAT paramName="lineWidth">4.505388737</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="lineWidth">2.306433439</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_COLOR paramName="nameColor">
-        <R>236</R>
-        <G>0</G>
-        <B>17</B>
-        <A>170</A>
-    </REMOTEUI_PARAM_COLOR>
-    <REMOTEUI_PARAM_INT paramName="nameFilter">4</REMOTEUI_PARAM_INT>
-    <REMOTEUI_PARAM_COLOR paramName="nodeColor">
-        <R>54</R>
-        <G>255</G>
-        <B>11</B>
+        <R>0</R>
+        <G>230</G>
+        <B>253</B>
         <A>255</A>
     </REMOTEUI_PARAM_COLOR>
+    <REMOTEUI_PARAM_INT paramName="nameFilter">6</REMOTEUI_PARAM_INT>
+    <REMOTEUI_PARAM_COLOR paramName="nodeColor">
+        <R>251</R>
+        <G>0</G>
+        <B>7</B>
+        <A>229</A>
+    </REMOTEUI_PARAM_COLOR>
     <REMOTEUI_PARAM_INT paramName="numLevels">2</REMOTEUI_PARAM_INT>
-    <REMOTEUI_PARAM_FLOAT paramName="pointAlpha">1.000000000</REMOTEUI_PARAM_FLOAT>
-    <REMOTEUI_PARAM_FLOAT paramName="pointSize">6.930680275</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="pointAlpha">0.746741176</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="pointSize">6.603353977</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_BOOL paramName="timings">0</REMOTEUI_PARAM_BOOL>
     <REMOTEUI_PARAM_FLOAT paramName="treeAngleOffset">0.193653196</REMOTEUI_PARAM_FLOAT>
-    <REMOTEUI_PARAM_FLOAT paramName="treeHeight">0.846641898</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="treeHeight">6.998230457</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_FLOAT paramName="treeSpread">0.379094779</REMOTEUI_PARAM_FLOAT>
     <REMOTEUI_PARAM_ENUM paramName="treeStyle">1</REMOTEUI_PARAM_ENUM>
-    <REMOTEUI_PARAM_FLOAT paramName="treeWidth">2.811636686</REMOTEUI_PARAM_FLOAT>
+    <REMOTEUI_PARAM_FLOAT paramName="treeWidth">0.856785238</REMOTEUI_PARAM_FLOAT>
 </OFX_REMOTE_UI_PARAMS>
