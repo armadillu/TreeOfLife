@@ -120,7 +120,7 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.numBlurOverlays, 0, 7);
 
 	OFX_REMOTEUI_SERVER_LOAD_FROM_XML();
-	//OFX_REMOTEUI_SERVER_START_THREADED(); //careful here!
+	OFX_REMOTEUI_SERVER_START_THREADED(); //careful here!
 
 	printf("INT_MAX: %d\n######################\n", INT_MAX);
 
