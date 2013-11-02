@@ -60,12 +60,12 @@ class testApp : public ofBaseApp{
 
 		Node* treeRoot;
 
-		ofMesh lines[NUM_LINE_MESHES];
-		ofMesh nodes;
-		ofMesh forces;
+		ofVboMesh lines[NUM_LINE_MESHES];
+		ofVboMesh nodes;
+		ofVboMesh forces;
 
-		ofMesh line2d;
-		ofMesh point2d;
+		ofVboMesh line2d;
+		ofVboMesh point2d;
 
 		ofEasyCam cam;
 

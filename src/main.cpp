@@ -7,6 +7,6 @@ int main(){
 	// set width, height, mode (OF_WINDOW or OF_FULLSCREEN)
 	window.setGlutDisplayString("rgba double samples>=4 depth");
 	//ofSetupOpenGL(&window, 1024, 768, OF_WINDOW);
-	ofSetupOpenGL(&window, 1680, 900, OF_WINDOW);
+	ofSetupOpenGL(&window, 1680, 900, OF_FULLSCREEN);
 	ofRunApp(new testApp()); // start the app
 }
