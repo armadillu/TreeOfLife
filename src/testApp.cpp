@@ -20,9 +20,8 @@ void testApp::setup(){
 		colors.push_back( ofColor(ofRandom(255), ofRandom(255), ofRandom(255)) );
 	}
 
-	OFX_REMOTEUI_SERVER_SETUP(10000); 	//start server
+	OFX_REMOTEUI_SERVER_SETUP(); 	//start server
 
-	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_COLOR( ofColor(0,0,0,32) ); // set a bg color for the upcoming params
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("TREE");
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(level, 3, NUM_LINE_MESHES);
 
@@ -46,8 +45,6 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelMyChildrenGain, 0, 1);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(repelChildChildGain, 0, 1);
 
-
-	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("CALCULATIONS");
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(liveRePositioning);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(updateMesh);
@@ -56,22 +53,20 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(adaptSpringsToSkeleton);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(calcChildForces);
 
-	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("TREE PARAMS");
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeSpread, 0, 3);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeWidth, 0, 3);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(treeHeight, 0, 3);
 
-	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("DEBUG");
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpringForces);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawSpheres);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(cameraDrag, 0, 1.0);
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("VISUAL TWEAKS");
-	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(drawNames);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 150);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameFilter, 1, 250);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(nameAlpha, 0, 1);
 
 	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
@@ -80,10 +75,9 @@ void testApp::setup(){
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(adapativeLineWidth);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(blurLines);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointAlpha, 0, 1);
-	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointSize, 1, 30);
+	OFX_REMOTEUI_SERVER_SHARE_PARAM(pointSize, 0.1, 30);
 
 	OFX_REMOTEUI_SERVER_SET_UPCOMING_PARAM_GROUP("BLUR OVERLAY");
-	OFX_REMOTEUI_SERVER_SET_NEW_COLOR();
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.blurPasses, 0, 4);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.blurOffset, 0.0, 10);
 	OFX_REMOTEUI_SERVER_SHARE_PARAM(gpuBlur.blurOverlayGain, 0, 255);
@@ -135,8 +129,28 @@ void testApp::setup(){
 	s.useDepth = true;
 	s.useStencil = false;
 
-	gpuBlur.setup(s);
+	gpuBlur.setup(s, true);
 	
+}
+
+
+void testApp::exportPositions(){
+
+	FILE* f = fopen( ofToDataPath("out.csv", true).c_str(), "w");
+
+	int n = chosenNodes.size();
+
+	for(int i = 0; i < n; i++){
+		Node* me = chosenNodes[i];
+		if (me->parents.size() == 0){
+			fprintf(f, "%f %f %f %p %p\n",me->pos.x, me->pos.y, me->pos.z, (void *)me, (void *)0);
+		}else{
+			fprintf(f, "%f %f %f %p %p\n",me->pos.x, me->pos.y, me->pos.z, (void *)me, (void *)me->parents[0]);
+		}
+	}
+
+	fclose(f);
+
 }
 
 void testApp::fillMesh(vector<Node*> &chosenNodes, ofMesh & ptsMesh){
@@ -372,8 +386,8 @@ void testApp::position3DTree( Node * node){
 
 	int n = node->children.size();
 
-	int unitH = 50 * treeHeight;
-	int unitW = 50 * treeWidth;
+	int unitH = 3 * treeHeight;
+	int unitW = 3 * treeWidth;
 	int totalW = node->totalLeaves * unitW;
 	int off = -totalW / 2;
 
@@ -390,13 +404,15 @@ void testApp::position3DTree( Node * node){
 			child->pos.z = r * cos(a2) ;
 		}else{
 			ofVec3f dir = treeWidth * ( node->pos - node->parents[0]->pos );
-			float variation = treeSpread;
-			float v1 = 180 * ofRandom(-variation, variation);
-			float v2 = 180 * ofRandom(-variation, variation);
-			float v3 = 180 * ofRandom(-variation, variation);
+			float variation = treeSpread * ofClamp(node->children.size() / 50., 1, 2.0);
+			float v1 = 60 * ofRandom(-variation, variation);
+			float v2 = 60 * ofRandom(-variation, variation);
+			float v3 = 60 * ofRandom(-variation, variation);
 			dir.rotate(v1, ofVec3f(1,0,0));
 			dir.rotate(v2, ofVec3f(0,1,0));
 			dir.rotate(v3, ofVec3f(0,0,1));
+			dir = dir * (1 + ofRandom(-treeHeight, treeHeight) / 3.0);
+			//dir = dir * (1 + ofClamp(node->children.size() / 50., 0, 1.0));
 			child->pos = node->pos + dir ;
 		}
 
@@ -484,8 +500,9 @@ void testApp::position23DTree( Node * node){
 
 void testApp::update(){
 
-	OFX_REMOTEUI_SERVER_UPDATE(DT);
+	//OFX_REMOTEUI_SERVER_UPDATE(DT);
 
+	cam.setDrag(cameraDrag);
 	TIME_SAMPLE_START("update");
 
 	bool newTree = false;
@@ -679,18 +696,24 @@ void testApp::draw(){
 	TIME_SAMPLE_STOP("draw");
 
 	ofSetColor(64);
-	TIME_SAMPLE_DRAW_TOP_LEFT();
 }
 
 
 void testApp::keyPressed(int key){
 
-	colors.clear();
-	for(int i = 0; i < 10000; i++){
-		colors.push_back( ofColor(ofRandom(255), ofRandom(255), ofRandom(255)) );
+	if(key=='g'){
+		colors.clear();
+		for(int i = 0; i < 10000; i++){
+			colors.push_back( ofColor(ofRandom(255), ofRandom(255), ofRandom(255)) );
+		}
+
+		pLevel = -1;
 	}
 
-	pLevel = -1;
+
+	if(key=='E'){
+		exportPositions();
+	}
 }
 
 
@@ -721,6 +744,4 @@ void testApp::mouseReleased(int x, int y, int button){
 }
 
 void testApp::exit(){
-	OFX_REMOTEUI_SERVER_SAVE_TO_XML();
-	OFX_REMOTEUI_SERVER_CLOSE();
 }

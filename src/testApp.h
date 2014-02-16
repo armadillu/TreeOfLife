@@ -31,6 +31,8 @@ class testApp : public ofBaseApp{
 
 		void exit();
 
+	void exportPositions();
+
 		void recursiveFillVectorAndSprings(Node * node, int &level, int maxLevel,
 										   vector<Node*> &chosenNodes, vector<Spring*> &springs);
 
@@ -116,4 +118,6 @@ class testApp : public ofBaseApp{
 
 		int level;
 		int pLevel;
+
+	float cameraDrag;
 };

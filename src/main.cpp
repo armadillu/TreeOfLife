@@ -1,12 +1,19 @@
 #include "testApp.h"
 #include "ofAppGlutWindow.h"
+#include "ofAppGLFWWindow.h"
 
 //--------------------------------------------------------------
 int main(){
-	ofAppGlutWindow window; // create a window
-	// set width, height, mode (OF_WINDOW or OF_FULLSCREEN)
-	window.setGlutDisplayString("rgba double samples>=4 depth");
-	//ofSetupOpenGL(&window, 1024, 768, OF_WINDOW);
-	ofSetupOpenGL(&window, 1680, 900, OF_FULLSCREEN);
-	ofRunApp(new testApp()); // start the app
+	ofAppGLFWWindow win;
+	win.setNumSamples(8);
+	//win.setOrientation(OF_ORIENTATION_90_LEFT);
+	win.setMultiDisplayFullscreen(true);
+	//win.set
+
+	ofSetupOpenGL(&win, 800,500, OF_FULLSCREEN);	// <-------- setup the GL context
+
+	// this kicks off the running of my app
+	// can be OF_WINDOW or OF_FULLSCREEN
+	// pass in width and height too:
+	ofRunApp(new testApp());
 }
